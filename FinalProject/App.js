@@ -1,10 +1,27 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
+import colors from './app/config/colors';
+import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Octicons } from '@expo/vector-icons';
 
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
+      <View style = {styles.taskbarContainer}>
+        <View style = {styles.homeButton}>
+          <Octicons name="home" size={40} color="black" />
+          </View>
+        <View style = {styles.discoverButton}>
+          <Ionicons name="compass-outline" size={50} color="black" />
+          </View>
+        <View style = {styles.cartButton}>
+          <MaterialCommunityIcons name="cart-outline" size={43} color="black" />
+          </View>
+        <View style = {styles.profileButton}>
+        <Octicons name="person" size={43} color="black" />
+          </View>
+      </View>
       <StatusBar style="auto" />
     </View>
   );
@@ -13,8 +30,35 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.bgColor,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  taskbarContainer: {
+    flexDirection: "row",
+    backgroundColor: colors.taskbarContainerColor,
+    alignItems: "center",
+    justfifyContent: "center",
+    height: 90,
+    width: "100%",
+    // position & bottom allow the taskbarContainer to be aligned at the bottom
+    position: "absolute",
+    bottom: 0, 
+  },
+  homeButton: {
+    flex: 1,
+    marginLeft: 25,
+  },
+  discoverButton: {
+    flex: 1,
+    marginLeft: 33,
+  },
+  cartButton: {
+    flex: 1,
+    marginLeft: 48,
+  },
+  profileButton: {
+    flex: 1,
+    marginLeft: 43,
   },
 });
