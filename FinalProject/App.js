@@ -8,6 +8,7 @@ import { Octicons } from '@expo/vector-icons';
 export default function App() {
   return (
     <View style={styles.container}>
+
       <View style = {styles.taskbarContainer}>
         <View style = {styles.homeButton}>
           <Octicons name="home" size={40} color="black" />
@@ -22,6 +23,28 @@ export default function App() {
         <Octicons name="person" size={43} color="black" />
           </View>
       </View>
+
+      <View style = {styles.productListingContainer}>
+        <View style = {styles.productImg}>
+
+          </View>
+        <View style = {styles.productTitle}>
+
+          </View>
+        <View style = {styles.productPrice}>
+
+          </View>
+        <View style = {styles.productDesc}>
+
+          </View>
+        <View style = {styles.productAcceptButton}>
+
+          </View>
+        <View style = {styles.productDeclineButton}>
+
+          </View>
+      </View>
+
       <StatusBar style="auto" />
     </View>
   );
@@ -31,14 +54,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bgColor,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   taskbarContainer: {
     flexDirection: "row",
     backgroundColor: colors.taskbarContainerColor,
     alignItems: "center",
-    justfifyContent: "center",
     height: 90,
     width: "100%",
     // position & bottom allow the taskbarContainer to be aligned at the bottom
@@ -60,5 +80,32 @@ const styles = StyleSheet.create({
   profileButton: {
     flex: 1,
     marginLeft: 43,
+  },
+  productListingContainer: {
+    backgroundColor: colors.productListingContainerColor,
+  },
+  productImg: {
+    flex: 1,
+
+  },
+  productTitle: {
+    flex: 1,
+
+  },
+  productPrice: {
+    flex: 1,
+
+  }, 
+  productDesc: {
+    flex: 1,
+
+  },
+  productAcceptButton: {
+    flex: 1,
+
+  },
+  productDeclineButton: {
+    flex: 1,
+
   },
 });
