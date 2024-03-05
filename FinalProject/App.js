@@ -4,10 +4,15 @@ import colors from './app/config/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Octicons } from '@expo/vector-icons';
+import { AntDesign } from '@expo/vector-icons';
 
 export default function App() {
   return (
     <View style={styles.container}>
+      <View style = {styles.searchButton}>
+        <AntDesign name="search1" size={35} color="black"
+        onPress = {() => console.log("button pressed")} />
+        </View>  
 
       <View style = {styles.taskbarContainer}>
         <View style = {styles.homeButton}>
@@ -55,6 +60,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bgColor,
   },
+  searchButton: {
+    alignItems: "flex-end",
+    marginRight: 25,
+    marginTop: 60,
+  },
   taskbarContainer: {
     flexDirection: "row",
     backgroundColor: colors.taskbarContainerColor,
@@ -71,7 +81,7 @@ const styles = StyleSheet.create({
   },
   discoverButton: {
     flex: 1,
-    marginLeft: 33,
+    marginLeft: 34,
   },
   cartButton: {
     flex: 1,
@@ -82,6 +92,11 @@ const styles = StyleSheet.create({
     marginLeft: 43,
   },
   productListingContainer: {
+    flexDirection: "column",
+    height: "75%",
+    width: "90%",
+    marginLeft: 19.5,
+    marginTop: 10,
     backgroundColor: colors.productListingContainerColor,
   },
   productImg: {
