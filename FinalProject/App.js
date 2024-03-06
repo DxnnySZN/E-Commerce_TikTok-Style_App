@@ -1,53 +1,46 @@
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import colors from './app/config/colors';
-import { Ionicons } from '@expo/vector-icons';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Octicons } from '@expo/vector-icons';
-import { AntDesign } from '@expo/vector-icons';
+import { AntDesign, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons';
 
 export default function App() {
   return (
     <View style={styles.container}>
-      <View style = {styles.searchButton}>
-        <AntDesign name="search1" size={35} color="black"
-        onPress = {() => console.log("button pressed")} />
-        </View>  
-
-      <View style = {styles.taskbarContainer}>
-        <View style = {styles.homeButton}>
-          <Octicons name="home" size={40} color="black" />
-          </View>
-        <View style = {styles.discoverButton}>
-          <Ionicons name="compass-outline" size={50} color="black" />
-          </View>
-        <View style = {styles.cartButton}>
-          <MaterialCommunityIcons name="cart-outline" size={43} color="black" />
-          </View>
-        <View style = {styles.profileButton}>
-        <Octicons name="person" size={43} color="black" />
-          </View>
+      <View style={styles.searchButton}>
+        <AntDesign name="search1" size={35} color="black" onPress={() => console.log("button pressed")} />
       </View>
 
-      <View style = {styles.productListingContainer}>
-        <View style = {styles.productImg}>
+      <View style={styles.taskbarContainer}>
+        <View style={styles.homeButton}>
+          <Octicons name="home" size={40} color="black" onPress={() => console.log("button pressed")} />
+        </View>
+        <View style={styles.discoverButton}>
+          <Ionicons name="compass-outline" size={50} color="black" onPress={() => console.log("button pressed")} />
+        </View>
+        <View style={styles.cartButton}>
+          <MaterialCommunityIcons name="cart-outline" size={43} color="black" onPress={() => console.log("button pressed")} />
+        </View>
+        <View style={styles.profileButton}>
+          <Octicons name="person" size={43} color="black" onPress={() => console.log("button pressed")} />
+        </View>
+      </View>
 
+      <View style={styles.productListingContainer}>
+        <View style={styles.productImg} />
+        <View style={styles.productTitle} />
+        <View style={styles.productPrice} />
+        <View style={styles.productDesc} />
+        <View style={styles.productButtonsContainer}>
+        <View style={[styles.productAcceptButton, styles.buttonElevation]}>
+            <MaterialIcons name="add-shopping-cart" size={45} color="green"
+             onPress={() => console.log("button pressed")} />
           </View>
-        <View style = {styles.productTitle}>
-
+          <View style={[styles.productDeclineButton, styles.buttonElevation]}>
+            <Ionicons name="trash-outline" size={45} color="red"
+             onPress={() => console.log("button pressed")} />
           </View>
-        <View style = {styles.productPrice}>
-
-          </View>
-        <View style = {styles.productDesc}>
-
-          </View>
-        <View style = {styles.productAcceptButton}>
-
-          </View>
-        <View style = {styles.productDeclineButton}>
-
-          </View>
+        </View>
       </View>
 
       <StatusBar style="auto" />
@@ -69,27 +62,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: colors.taskbarContainerColor,
     alignItems: "center",
+    justifyContent: "space-between", // ensure equal spacing between buttons
     height: 90,
     width: "100%",
     // position & bottom allow the taskbarContainer to be aligned at the bottom
     position: "absolute",
-    bottom: 0, 
-  },
-  homeButton: {
-    flex: 1,
-    marginLeft: 25,
-  },
-  discoverButton: {
-    flex: 1,
-    marginLeft: 34,
-  },
-  cartButton: {
-    flex: 1,
-    marginLeft: 48,
-  },
-  profileButton: {
-    flex: 1,
-    marginLeft: 43,
+    bottom: 0,
+    paddingHorizontal: 20, // add padding to distribute space
   },
   productListingContainer: {
     flexDirection: "column",
@@ -101,26 +80,34 @@ const styles = StyleSheet.create({
   },
   productImg: {
     flex: 1,
-
   },
   productTitle: {
     flex: 1,
-
   },
   productPrice: {
     flex: 1,
-
-  }, 
+  },
   productDesc: {
     flex: 1,
-
+  },
+  productButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginTop: 10,
   },
   productAcceptButton: {
-    flex: 1,
-
+    alignItems: "center",
   },
   productDeclineButton: {
-    flex: 1,
-
+    alignItems: "center",
+  },
+  buttonElevation: {
+    elevation: 3, // elevation for Android shadow
+    shadowColor: 'black', // shadow color
+    shadowOpacity: 0.3, // shadow opacity
+    shadowOffset: { width: 0, height: 2 }, // shadow offset
+    shadowRadius: 4, // shadow radius
+    marginVertical: 25, // adjusts vertical spacing
   },
 });
