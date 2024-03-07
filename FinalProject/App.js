@@ -1,28 +1,62 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
+// import { Configuration, AuthenticationApi, OrdersApi } from '@whitebox-co/walmart-marketplace-api';
+// import { Buffer } from 'buffer/'; // trailing slash is important and not a mistake
 import colors from './app/config/colors';
 import { AntDesign, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons';
+
+// // configure authorization api
+// const configuration = new Configuration();
+// const authApi = new AuthenticationApi(configuration);
+// const authorization = 'Basic ' + Buffer.from(env.CLIENT_ID + ':' + env.CLIENT_SECRET).toString('base64');
+
+// // get response token
+// const tokenResponse = await authApi.tokenAPI({
+// 	authorization,
+// 	wMQOSCORRELATIONID: uuidv4(),
+// 	wMSVCNAME: '@whitebox-co/walmart-marketplace-api',
+// 	grantType: 'client_credentials',
+// 	wMCONSUMERCHANNELTYPE: env.CONSUMER_CHANNEL_TYPE,
+// });
+
+// // configure orders api
+// const ordersApi = new OrdersApi(configuration);
+
+// // make subsequent order calls
+// const orderResponse = await ordersApi.getAnOrder({
+// 	authorization,
+// 	wMSECACCESSTOKEN: tokenResponse.data?.access_token,
+// 	wMQOSCORRELATIONID: uuidv4(),
+// 	wMSVCNAME: '@whitebox-co/walmart-marketplace-api',
+// 	wMCONSUMERCHANNELTYPE: env.CONSUMER_CHANNEL_TYPE,
+// 	id: 1,
+// });
 
 export default function App() {
   return (
     <View style={styles.container}>
       <View style={styles.searchButton}>
-        <AntDesign name="search1" size={35} color="black" onPress={() => console.log("button pressed")} />
+        <AntDesign name="search1" size={35} color="black"
+         onPress={() => console.log("button pressed")} />
       </View>
 
       <View style={styles.taskbarContainer}>
         <View style={styles.homeButton}>
-          <Octicons name="home" size={40} color="black" onPress={() => console.log("button pressed")} />
+          <Octicons name="home" size={40} color="black"
+           onPress={() => console.log("button pressed")} />
         </View>
         <View style={styles.discoverButton}>
-          <Ionicons name="compass-outline" size={50} color="black" onPress={() => console.log("button pressed")} />
+          <Ionicons name="compass-outline" size={50} color="black"
+           onPress={() => console.log("button pressed")} />
         </View>
         <View style={styles.cartButton}>
-          <MaterialCommunityIcons name="cart-outline" size={43} color="black" onPress={() => console.log("button pressed")} />
+          <MaterialCommunityIcons name="cart-outline" size={43} color="black"
+           onPress={() => console.log("button pressed")} />
         </View>
         <View style={styles.profileButton}>
-          <Octicons name="person" size={43} color="black" onPress={() => console.log("button pressed")} />
+          <Octicons name="person" size={43} color="black"
+           onPress={() => console.log("button pressed")} />
         </View>
       </View>
 
@@ -74,7 +108,9 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     height: "75%",
     width: "90%",
-    marginLeft: 19.5,
+    // "auto" ensures the margins from left and right will be equally spaced
+    marginLeft: "auto", 
+    marginRight: "auto", 
     marginTop: 10,
     backgroundColor: colors.productListingContainerColor,
   },
@@ -103,7 +139,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonElevation: {
-    elevation: 3, // elevation for Android shadow
+    elevation: 3, // elevation for android shadow
     shadowColor: 'black', // shadow color
     shadowOpacity: 0.3, // shadow opacity
     shadowOffset: { width: 0, height: 2 }, // shadow offset
