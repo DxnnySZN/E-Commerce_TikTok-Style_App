@@ -1,39 +1,47 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-// import { Configuration, AuthenticationApi, OrdersApi } from '@whitebox-co/walmart-marketplace-api';
-// import { Buffer } from 'buffer/'; // trailing slash is important and not a mistake
+import { Configuration, AuthenticationApi, OrdersApi } from '@whitebox-co/walmart-marketplace-api';
+import { Buffer } from 'buffer/'; // trailing slash is important and not a mistake
 import colors from './app/config/colors';
 import { AntDesign, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons';
 
-// // configure authorization api
-// const configuration = new Configuration();
-// const authApi = new AuthenticationApi(configuration);
-// const authorization = 'Basic ' + Buffer.from(env.CLIENT_ID + ':' + env.CLIENT_SECRET).toString('base64');
-
-// // get response token
-// const tokenResponse = await authApi.tokenAPI({
-// 	authorization,
-// 	wMQOSCORRELATIONID: uuidv4(),
-// 	wMSVCNAME: '@whitebox-co/walmart-marketplace-api',
-// 	grantType: 'client_credentials',
-// 	wMCONSUMERCHANNELTYPE: env.CONSUMER_CHANNEL_TYPE,
-// });
-
-// // configure orders api
-// const ordersApi = new OrdersApi(configuration);
-
-// // make subsequent order calls
-// const orderResponse = await ordersApi.getAnOrder({
-// 	authorization,
-// 	wMSECACCESSTOKEN: tokenResponse.data?.access_token,
-// 	wMQOSCORRELATIONID: uuidv4(),
-// 	wMSVCNAME: '@whitebox-co/walmart-marketplace-api',
-// 	wMCONSUMERCHANNELTYPE: env.CONSUMER_CHANNEL_TYPE,
-// 	id: 1,
-// });
-
 export default function App() {
+  const randomFxn = () => {
+    for (let i = 0; i < array.length; i++) {
+      array[i] = Math.floor(Math.random() * 256);
+    }   
+  };
+
+  const apiStarter = async() => {
+  // configure authorization api
+  const configuration = new Configuration();
+  const authApi = new AuthenticationApi(configuration);
+  const authorization = 'Basic ' + Buffer.from(env.CLIENT_ID + ':' + env.CLIENT_SECRET).toString('base64');
+
+  // get response token
+  const tokenResponse = await authApi.tokenAPI({
+	  authorization,
+	  wMQOSCORRELATIONID: randomFxn(),
+	  wMSVCNAME: '@whitebox-co/walmart-marketplace-api',
+	  grantType: 'client_credentials',
+	  wMCONSUMERCHANNELTYPE: env.CONSUMER_CHANNEL_TYPE,
+  });
+
+  // configure orders api
+  const ordersApi = new OrdersApi(configuration);
+
+  // make subsequent order calls
+  const orderResponse = await ordersApi.getAnOrder({
+	  authorization,
+	  wMSECACCESSTOKEN: tokenResponse.data?.access_token,
+	  wMQOSCORRELATIONID: randomFxn(),
+	  wMSVCNAME: '@whitebox-co/walmart-marketplace-api',
+	  wMCONSUMERCHANNELTYPE: env.CONSUMER_CHANNEL_TYPE,
+	  id: 1,
+  });
+}
+
   return (
     <View style={styles.container}>
       <View style={styles.searchButton}>
