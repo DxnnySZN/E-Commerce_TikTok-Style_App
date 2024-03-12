@@ -1,46 +1,65 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-import { Configuration, AuthenticationApi, OrdersApi } from '@whitebox-co/walmart-marketplace-api';
-import { Buffer } from 'buffer/'; // trailing slash is important and not a mistake
 import colors from './app/config/colors';
 import { AntDesign, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons';
 
 export default function App() {
-  const randomFxn = () => {
-    for (let i = 0; i < array.length; i++) {
-      array[i] = Math.floor(Math.random() * 256);
-    }   
+  // API endpoint
+  const url = "https://marketplace.walmartapis.com/v3/items/{id}";
+
+  // path parameter
+  const itemId = "your_item_id_here";
+
+  // query parameters
+  const productIdType = "SKU";  // can change this to the appropriate code type
+  const condition = "New";  // can change this to the desired condition
+
+  // headers
+  const headers = {
+    "WM_SEC.ACCESS_TOKEN": "your_access_token_here",
+    "WM_QOS.CORRELATION_ID": "your_correlation_id_here",
+    "WM_SVC.NAME": "Walmart Service Name",
+    // add other required headers here
   };
 
-  const apiStarter = async() => {
-  // configure authorization api
-  const configuration = new Configuration();
-  const authApi = new AuthenticationApi(configuration);
-  const authorization = 'Basic ' + Buffer.from(env.CLIENT_ID + ':' + env.CLIENT_SECRET).toString('base64');
-
-  // get response token
-  const tokenResponse = await authApi.tokenAPI({
-	  authorization,
-	  wMQOSCORRELATIONID: randomFxn(),
-	  wMSVCNAME: '@whitebox-co/walmart-marketplace-api',
-	  grantType: 'client_credentials',
-	  wMCONSUMERCHANNELTYPE: env.CONSUMER_CHANNEL_TYPE,
+  // parameters
+  const params = new URLSearchParams({
+    productIdType: productIdType,
+    condition: condition,
   });
 
-  // configure orders api
-  const ordersApi = new OrdersApi(configuration);
-
-  // make subsequent order calls
-  const orderResponse = await ordersApi.getAnOrder({
-	  authorization,
-	  wMSECACCESSTOKEN: tokenResponse.data?.access_token,
-	  wMQOSCORRELATIONID: randomFxn(),
-	  wMSVCNAME: '@whitebox-co/walmart-marketplace-api',
-	  wMCONSUMERCHANNELTYPE: env.CONSUMER_CHANNEL_TYPE,
-	  id: 1,
+  // make the request
+  fetch(`${url}/${itemId}?${params}`, {
+    method: "GET",
+    headers: headers,
+  })
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    } else {
+        throw new Error(`Failed to retrieve item details. Status code: ${response.status}`);
+    }
+  })
+  .then(data => {
+    const itemDetails = data.responseRecord;
+    // display item details
+    console.log("Item Details:");
+    console.log("SKU:", itemDetails.sku);
+    console.log("Condition:", itemDetails.condition);
+    console.log("Walmart Product ID:", itemDetails.wpid);
+    console.log("UPC:", itemDetails.upc);
+    console.log("GTIN:", itemDetails.gtin);
+    console.log("Product Name:", itemDetails.productName);
+    console.log("Shelf:", itemDetails.shelf);
+    console.log("Product Type:", itemDetails.productType);
+    console.log("Price:", itemDetails.price);
+    console.log("Published Status:", itemDetails.publishedStatus);
+    // display other relevant details as needed
+  })
+  .catch(error => {
+    console.error("Error:", error.message);
   });
-}
 
   return (
     <View style={styles.container}>
