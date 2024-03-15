@@ -1,65 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-import colors from './app/config/colors';
+import axios from 'axios'; // allows HTTP requests from both Node.js environments and web browsers, 
+// providing an easy-to-use API for making asynchronous HTTP requests to REST endpoints and interacting with web servers
 import { AntDesign, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons';
+import colors from './app/config/colors';
 
 export default function App() {
-  // API endpoint
-  const url = "https://marketplace.walmartapis.com/v3/items/{id}";
-
-  // path parameter
-  const itemId = "your_item_id_here";
-
-  // query parameters
-  const productIdType = "SKU";  // can change this to the appropriate code type
-  const condition = "New";  // can change this to the desired condition
-
-  // headers
-  const headers = {
-    "WM_SEC.ACCESS_TOKEN": "your_access_token_here",
-    "WM_QOS.CORRELATION_ID": "your_correlation_id_here",
-    "WM_SVC.NAME": "Walmart Service Name",
-    // add other required headers here
-  };
-
-  // parameters
-  const params = new URLSearchParams({
-    productIdType: productIdType,
-    condition: condition,
-  });
-
-  // make the request
-  fetch(`${url}/${itemId}?${params}`, {
-    method: "GET",
-    headers: headers,
-  })
-  .then(response => {
-    if (response.ok) {
-      return response.json();
-    } else {
-        throw new Error(`Failed to retrieve item details. Status code: ${response.status}`);
+  useEffect(() => {
+    // set up the request parameters
+    const params = {
+      api_key: "CB3A096052B1462597B6C604A593340F",
+      search_term: "electronics",
+      type: "search",
     }
-  })
-  .then(data => {
-    const itemDetails = data.responseRecord;
-    // display item details
-    console.log("Item Details:");
-    console.log("SKU:", itemDetails.sku);
-    console.log("Condition:", itemDetails.condition);
-    console.log("Walmart Product ID:", itemDetails.wpid);
-    console.log("UPC:", itemDetails.upc);
-    console.log("GTIN:", itemDetails.gtin);
-    console.log("Product Name:", itemDetails.productName);
-    console.log("Shelf:", itemDetails.shelf);
-    console.log("Product Type:", itemDetails.productType);
-    console.log("Price:", itemDetails.price);
-    console.log("Published Status:", itemDetails.publishedStatus);
-    // display other relevant details as needed
-  })
-  .catch(error => {
-    console.error("Error:", error.message);
-  });
+
+    // make the http GET request to BlueCart API
+    axios.get('https://api.bluecartapi.com/request', { params })
+      .then(response => {
+        // print the JSON response from BlueCart API
+        console.log(JSON.stringify(response.data, null, 2));
+      })
+      .catch(error => {
+        // catch and print the error
+        console.log(error);
+      });
+  }, []); // empty dependency array ensures useEffect runs only once on component mount
 
   return (
     <View style={styles.container}>
@@ -103,7 +69,6 @@ export default function App() {
           </View>
         </View>
       </View>
-
       <StatusBar style="auto" />
     </View>
   );
