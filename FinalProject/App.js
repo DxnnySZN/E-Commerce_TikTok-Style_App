@@ -1,12 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import axios from 'axios'; // allows HTTP requests from both Node.js environments and web browsers, 
 // providing an easy-to-use API for making asynchronous HTTP requests to REST endpoints and interacting with web servers
 import { AntDesign, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons';
+import { ActivityIndicator } from 'react-native';
 import colors from './app/config/colors';
 
 export default function App() {
+  const [productData, setProductData] = useState(null); // state to hold product data
+
   useEffect(() => {
     // set up the request parameters
     const params = {
@@ -18,12 +21,12 @@ export default function App() {
     // make the http GET request to BlueCart API
     axios.get('https://api.bluecartapi.com/request', { params })
       .then(response => {
-        // print the JSON response from BlueCart API
-        console.log(JSON.stringify(response.data, null, 2));
+        setProductData(response.data); // set product data in state
       })
       .catch(error => {
-        // catch and print the error
-        console.log(error);
+        console.log("Error status:", error.response.status);
+        console.log("Error data:", error.response.data);
+        console.log("Error message:", error.message);
       });
   }, []); // empty dependency array ensures useEffect runs only once on component mount
 
@@ -53,22 +56,29 @@ export default function App() {
         </View>
       </View>
 
-      <View style={styles.productListingContainer}>
-        <View style={styles.productImg} />
-        <View style={styles.productTitle} />
-        <View style={styles.productPrice} />
-        <View style={styles.productDesc} />
-        <View style={styles.productButtonsContainer}>
-        <View style={[styles.productAcceptButton, styles.buttonElevation]}>
-            <MaterialIcons name="add-shopping-cart" size={45} color="green"
-             onPress={() => console.log("button pressed")} />
-          </View>
-          <View style={[styles.productDeclineButton, styles.buttonElevation]}>
-            <Ionicons name="trash-outline" size={45} color="red"
-             onPress={() => console.log("button pressed")} />
-          </View>
+      {/* check if product data is available and is an array */}
+      {productData && Array.isArray(productData) ? (
+        <View style={styles.productListingContainer}>
+          {productData.map((product, index) => (
+            <View key={index} style={styles.productItem}>
+              <Image source={{ uri: product.imageURL }} style={styles.productImg} />
+              <Text style={styles.productTitle}>{product.title}</Text>
+              <Text style={styles.productPrice}>{product.price}</Text>
+              <Text style={styles.productDesc}>{product.description}</Text>
+              <View style={styles.productButtonsContainer}>
+                <View style={[styles.productAcceptButton, styles.buttonElevation]}>
+                  <MaterialIcons name="add-shopping-cart" size={45} color="green" onPress={() => console.log("button pressed")} />
+                </View>
+                <View style={[styles.productDeclineButton, styles.buttonElevation]}>
+                  <Ionicons name="trash-outline" size={45} color="red" onPress={() => console.log("button pressed")} />
+                </View>
+              </View>
+            </View>
+          ))}
         </View>
-      </View>
+      ) : (
+        <ActivityIndicator size="large" color={colors.taskbarContainerColor} /> // show loading indicator if product data is not available
+      )}
       <StatusBar style="auto" />
     </View>
   );
