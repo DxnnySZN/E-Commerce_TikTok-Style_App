@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import axios from 'axios'; // allows HTTP requests from both Node.js environments and web browsers, 
 // providing an easy-to-use API for making asynchronous HTTP requests to REST endpoints and interacting with web servers
 import { AntDesign, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } from '@expo/vector-icons';
+import { Image } from 'react-native';
 import { ActivityIndicator } from 'react-native';
 import colors from './app/config/colors';
 
@@ -14,6 +15,7 @@ export default function App() {
     // set up the request parameters
     const params = {
       api_key: "CB3A096052B1462597B6C604A593340F",
+      collection_id: "15E6FF35",
       search_term: "electronics",
       type: "search",
     }
@@ -117,7 +119,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.productListingContainerColor,
   },
   productImg: {
-    flex: 1,
+    width: "40%",
+    height: 200,
+    resizeMode: "cover",
+    borderRadius: 10,
   },
   productTitle: {
     flex: 1,
