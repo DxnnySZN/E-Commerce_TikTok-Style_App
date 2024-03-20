@@ -9,21 +9,26 @@ import { ActivityIndicator } from 'react-native';
 import colors from './app/config/colors';
 
 export default function App() {
-  const [productData, setProductData] = useState(null); // state to hold product data
+  // hold product data
+  const [productImg, setProductImg] = useState(null);
+  const [productTitle, setProductTitle] = useState(null);
+  const [productPrice, setProductPrice] = useState(null);
 
   useEffect(() => {
     // set up the request parameters
     const params = {
       api_key: "CB3A096052B1462597B6C604A593340F",
-      collection_id: "15E6FF35",
       search_term: "electronics",
       type: "search",
     }
 
     // make the http GET request to BlueCart API
-    axios.get('https://api.bluecartapi.com/request', { params })
+    axios.get("https://api.bluecartapi.com/request?api_key=CB3A096052B1462597B6C604A593340F&search_term=electronics&type=search")
       .then(response => {
-        setProductData(response.data); // set product data in state
+        // search_results array contains all walmart electronics items
+        setProductImg(JSON.stringify(response.data.search_results[0].product.main_image));
+        setProductTitle(JSON.stringify(response.data.search_results[0].product.title)); 
+        setProductPrice("$" + JSON.stringify(response.data.search_results[0].product.offers.primary.price));
       })
       .catch(error => {
         console.log("Error status:", error.response.status);
@@ -63,10 +68,9 @@ export default function App() {
         <View style={styles.productListingContainer}>
           {productData.map((product, index) => (
             <View key={index} style={styles.productItem}>
-              <Image source={{ uri: product.imageURL }} style={styles.productImg} />
-              <Text style={styles.productTitle}>{product.title}</Text>
-              <Text style={styles.productPrice}>{product.price}</Text>
-              <Text style={styles.productDesc}>{product.description}</Text>
+              <Image source={{productImg}} style={styles.productImg} />
+              <Text style={styles.productTitle}>{productTitle}</Text>
+              <Text style={styles.productPrice}>{productPrice}</Text>
               <View style={styles.productButtonsContainer}>
                 <View style={[styles.productAcceptButton, styles.buttonElevation]}>
                   <MaterialIcons name="add-shopping-cart" size={45} color="green" onPress={() => console.log("button pressed")} />
