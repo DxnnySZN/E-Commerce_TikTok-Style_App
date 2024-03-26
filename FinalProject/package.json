@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo-google-fonts/lexend": "^0.2.3",
     "@whitebox-co/walmart-marketplace-api": "^3.0.1",
     "axios": "^1.6.7",
     "buffer": "^6.0.3",

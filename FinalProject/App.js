@@ -7,35 +7,49 @@ import { AntDesign, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons } 
 import { Image } from 'react-native';
 import { ActivityIndicator } from 'react-native';
 import colors from './app/config/colors';
+import * as Font from "expo-font";
+
+const getFonts = () => Font.loadAsync({
+  "lexend-regular": require("C:/ReactNative/E-Commerce_TikTok-Style_App/FinalProject/app/assets/fonts/Lexend-Regular.ttf"),
+  "lexend-semiBold": require("C:/ReactNative/E-Commerce_TikTok-Style_App/FinalProject/app/assets/fonts/Lexend-SemiBold.ttf")
+});
 
 export default function App() {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
   // hold product data
   const [productImg, setProductImg] = useState(null);
   const [productTitle, setProductTitle] = useState(null);
   const [productPrice, setProductPrice] = useState(null);
 
   useEffect(() => {
-    // set up the request parameters
-    // const params = {
-    //   api_key: "3A09B5D146A84189AE44C3A628164CF1",
-    //   search_term: "electronics",
-    //   type: "search",
-    // }
+    async function loadFonts(){
+      await getFonts();
+      setFontsLoaded(true);
+    }
+    loadFonts();
 
-    // DO NOT CLICK THIS LINK UNLESS YOU WANT TO WASTE CREDITS ($)
-    axios.get("https://api.bluecartapi.com/request?api_key=3A09B5D146A84189AE44C3A628164CF1&search_term=electronics&type=search")
-      .then(response => {
-        // search_results array contains all walmart electronics items
-        setProductImg(JSON.stringify(response.data.search_results[0].product.main_image));
-        setProductTitle(JSON.stringify(response.data.search_results[0].product.title)); 
-        setProductPrice("$" + JSON.stringify(response.data.search_results[0].offers.primary.price));
-      })
-      .catch(error => {
-        console.log("Error status:", error.response.status);
-        console.log("Error data:", error.response.data);
-        console.log("Error message:", error.message);
-      });
-  }, []); // empty dependency array ensures useEffect runs only once on component mount
+    // fetch product data only when fonts are loaded
+    if (fontsLoaded) {
+      // DO NOT CLICK THIS LINK UNLESS YOU WANT TO WASTE CREDITS ($)
+      axios.get("https://api.bluecartapi.com/request?api_key=3A09B5D146A84189AE44C3A628164CF1&search_term=electronics&type=search")
+        .then(response => {
+          // search_results array contains all walmart electronics items
+          setProductImg(response.data.search_results[0].product.main_image);
+          setProductTitle(response.data.search_results[0].product.title); 
+          setProductPrice("$" + response.data.search_results[0].offers.primary.price);
+        })
+        .catch(error => {
+          console.log("Error status:", error.response.status);
+          console.log("Error data:", error.response.data);
+          console.log("Error message:", error.message);
+        });
+    }
+  }, [fontsLoaded]); // run the effect whenever fontsLoaded changes
+
+  if (!fontsLoaded) {
+    return <ActivityIndicator size="large" color={colors.taskbarContainerColor} />;
+  }
 
   return (
     <View style={styles.container}>
@@ -63,25 +77,25 @@ export default function App() {
         </View>
       </View>
 
+    <View style={styles.productListingContainer}>
       {productImg && productTitle && productPrice ? (
-        <View style={styles.productListingContainer}>
-          <View style={styles.productItem}>
-            <Image source={{ uri: productImg }} style={styles.productImg} />
-            <Text style={styles.productTitle}>{productTitle}</Text>
-            <Text style={styles.productPrice}>{productPrice}</Text>
-            <View style={styles.productButtonsContainer}>
-              <View style={[styles.productAcceptButton, styles.buttonElevation]}>
-                <MaterialIcons name="add-shopping-cart" size={45} color="green" onPress={() => console.log("button pressed")} />
-              </View>
-              <View style={[styles.productDeclineButton, styles.buttonElevation]}>
-                <Ionicons name="trash-outline" size={45} color="red" onPress={() => console.log("button pressed")} />
-              </View>
+        <View style={styles.productItem}>
+          <Image source={{ uri: productImg }} style={styles.productImg} />
+          <Text style={styles.productTitle}>{productTitle}</Text>
+          <Text style={styles.productPrice}>{productPrice}</Text>
+          <View style={styles.productButtonsContainer}>
+            <View style={[styles.productAcceptButton, styles.buttonElevation]}>
+              <MaterialIcons name="add-shopping-cart" size={45} color="green" onPress={() => console.log("button pressed")} />
+            </View>
+            <View style={[styles.productDeclineButton, styles.buttonElevation]}>
+              <Ionicons name="trash-outline" size={45} color="red" onPress={() => console.log("button pressed")} />
             </View>
           </View>
         </View>
       ) : (
         <ActivityIndicator size="large" color={colors.taskbarContainerColor} /> // show loading indicator if product data is not available
       )}
+    </View>
       <StatusBar style="auto" />
     </View>
   );
@@ -119,32 +133,44 @@ const styles = StyleSheet.create({
     marginTop: 10,
     backgroundColor: colors.productListingContainerColor,
   },
+  productItem: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginVertical: 10, 
+    paddingHorizontal: 20, 
+  },
   productImg: {
-    width: "40%",
-    height: 200,
+    marginTop: 30,
+    width: "85%",
+    height: 300,
     resizeMode: "cover",
     borderRadius: 10,
   },
   productTitle: {
-    flex: 1,
+    marginTop: 30, 
+    fontSize: 18, 
+    fontFamily: "lexend-semiBold",
+    textAlign: "center",
+    color: colors.taskbarContainerColor, 
   },
   productPrice: {
-    flex: 1,
-  },
-  productDesc: {
-    flex: 1,
+    marginTop: 30, 
+    fontSize: 45, 
+    fontFamily: "lexend-regular",
+    textAlign: "center",
+    color: colors.taskbarContainerColor,
   },
   productButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 5,
   },
   productAcceptButton: {
-    alignItems: "center",
+    paddingHorizontal: 55,
   },
   productDeclineButton: {
-    alignItems: "center",
+    paddingHorizontal: 55,
   },
   buttonElevation: {
     elevation: 3, // elevation for android shadow
