@@ -9,14 +9,12 @@ import * as Font from 'expo-font';
 import { Swipeable, GestureHandlerRootView} from 'react-native-gesture-handler';
 
 const getFonts = () => Font.loadAsync({
-  "lexend-regular": require("C:/ReactNative/E-Commerce_TikTok-Style_App/FinalProject/app/assets/fonts/Lexend-Regular.ttf"),
-  // "./app/assets/fonts/Lexend-Regular.ttf"
-  "lexend-semibold": require("C:/ReactNative/E-Commerce_TikTok-Style_App/FinalProject/app/assets/fonts/Lexend-SemiBold.ttf")
-  // "./app/assets/fonts/Lexend-SemiBold.ttf"
+  "lexend-regular": require("./app/assets/fonts/Lexend-Regular.ttf"),
+  "lexend-semibold": require("./app/assets/fonts/Lexend-SemiBold.ttf")
 });
 
 export default function App() {
-  // state variable to track whether custom fonts have been loaded
+  // track whether custom fonts have been loaded
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
   // hold product data
@@ -24,18 +22,19 @@ export default function App() {
   const [productTitle, setProductTitle] = useState(null);
   const [productPrice, setProductPrice] = useState(null);
 
-  // state variable to track whether the search button has been pressed 
+  // track whether the search button has been pressed 
   const [searchPressed, setSearchPressed] = useState(false);
-  // state variable to hold the text entered in the search input
+  // hold the text entered in the search input
   const [searchText, setSearchText] = useState("");
-  // state variable for search results
+
   const [searchResults, setSearchResults] = useState([]);
+  const [discoverResults, setDiscoverResults] = useState([]);
 
   const fetchNewProduct = useCallback(() => { // useCallback prevents fetching of new products during each render
     // fetch product data only when fonts are loaded and the search button hasn't been pressed
     if(fontsLoaded && !searchPressed){
       // DO NOT CLICK THIS LINK UNLESS YOU WANT TO WASTE CREDITS ($)
-      axios.get("https://api.bluecartapi.com/request?api_key=B30548478ACD45A6A0D3C31F707CE5A8&search_term=electronics&type=search")
+      axios.get("https://api.bluecartapi.com/request?api_key=AF50FD2213A445A2A117DE571BEF6BA0&search_term=electronics&type=search")
       .then(response => {
         // get random index within range of search_results array
         const randomIndex = Math.floor(Math.random() * response.data.search_results.length);
@@ -54,9 +53,9 @@ export default function App() {
   }, [fontsLoaded, searchPressed]); 
 
   const fetchSearchResults = useCallback((searchText) => { 
-    // check if searchText is not empty before making the API call
-    if(searchText.trim() !== ""){
-      axios.get(`https://api.bluecartapi.com/request?api_key=B30548478ACD45A6A0D3C31F707CE5A8&search_term=${searchText}&type=search`) // use `` to allow string interpolation with ${}
+    // check if searchText is defined and not empty before making the API call
+    if(searchText && searchText.trim() !== ""){
+      axios.get(`https://api.bluecartapi.com/request?api_key=AF50FD2213A445A2A117DE571BEF6BA0&search_term=${searchText}&type=search`) // use `` to allow string interpolation with ${}
       .then(response => {
         setSearchResults(response.data.search_results);
       })
@@ -69,14 +68,24 @@ export default function App() {
     }
   },[]);
 
+  const fetchDiscoverResults = useCallback(() => {
+    axios.get("https://api.bluecartapi.com/request?api_key=AF50FD2213A445A2A117DE571BEF6BA0&search_term=electronics&type=search")
+      .then(response => {
+        setDiscoverResults(response.data.search_results);
+      })
+      .catch(error => {
+        console.error("Error fetching electronics:", error);
+      });
+  }, []);
+
+  // makes sure getFonts() does its job and then runs the rest of the effect
   useEffect(() => {
     async function loadFonts() {
       await getFonts();
       setFontsLoaded(true);
     }
-    loadFonts(); 
-    fetchNewProduct();
-  }, [fetchNewProduct]); 
+    loadFonts(); fetchNewProduct(); fetchSearchResults(); fetchDiscoverResults();
+  }, [fetchNewProduct, fetchSearchResults, fetchDiscoverResults]); 
 
   const handleAcceptProduct = () => {
     fetchNewProduct();
@@ -109,6 +118,11 @@ export default function App() {
     </View>
   );
 
+  // render discovered items inside productListingContainer when discoverButton is clicked
+  const renderDiscoverItems = () => {
+    //
+  };
+
   return (
     <GestureHandlerRootView style = {styles.container}>
       <View style = {styles.searchButton}>
@@ -123,7 +137,7 @@ export default function App() {
         </View>
         <View style = {styles.discoverButton}>
           <Ionicons name = "compass-outline" size = {50} color = "black"
-           onPress = {() => console.log("button pressed")}/>
+           onPress = {renderDiscoverItems}/>
         </View>
         <View style = {styles.cartButton}>
           <MaterialCommunityIcons name = "cart-outline" size = {43} color = "black"
@@ -161,8 +175,9 @@ export default function App() {
       {searchPressed ? (
         <ScrollView style = {styles.scrollView}>
           <View style = {styles.searchDataContainer}>
-            {searchResults.map(result => (
-              <Swipeable key = {result.product.item_id} renderRightActions = {() => renderRightActions(result.product.item_id)}>
+          {/* mapping through searchResults to render each product with their specific index which fixes the duplicate products (non-unique keys) issue */}
+            {searchResults.map((result, index) => (
+              <Swipeable key = {`${result.product.item_id}_${index}`} renderRightActions = {() => renderRightActions(result.product.item_id)}>
                 <View style = {styles.imgContainer}>
                   <Image source = {{ uri: result.product.main_image }} style = {styles.productSearchImg}/>
                 </View>
@@ -321,7 +336,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 18, 
     fontWeight: "bold",
-    alignItems: "center",
+    textAlign: "center",
     fontFamily: "lexend-semibold",
     color: colors.taskbarContainerColor, 
   },
