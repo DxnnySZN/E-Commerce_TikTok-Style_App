@@ -29,6 +29,9 @@ export default function App() {
 
   const [searchResults, setSearchResults] = useState([]);
   const [discoverResults, setDiscoverResults] = useState([]);
+  
+  // track whether the discover button has been pressed
+  const [discoverVisible, setDiscoverVisible] = useState(false);
 
   const fetchNewProduct = useCallback(() => { // useCallback prevents fetching of new products during each render
     // fetch product data only when fonts are loaded and the search button hasn't been pressed
@@ -68,10 +71,29 @@ export default function App() {
     }
   },[]);
 
+  const categorizeItems = (items) => {
+    // initialize empty object to hold categorized items
+    const categorizedItems = {};
+
+    for(let i = 0; i < items.length; i++){
+      // extract current item and its brand
+      const item = items[i];
+      const brand = item.product.brand;
+
+      // if brand doesn't exist in categorizedItems, create empty array for it
+      if(!categorizedItems[brand]){
+        categorizedItems[brand] = [];
+      }
+      categorizedItems[brand].push(item);
+    }
+    return categorizedItems;
+  }
+
   const fetchDiscoverResults = useCallback(() => {
     axios.get("https://api.bluecartapi.com/request?api_key=AF50FD2213A445A2A117DE571BEF6BA0&search_term=electronics&type=search")
       .then(response => {
-        setDiscoverResults(response.data.search_results);
+        const categorizedItems = categorizeItems(response.data.search_results);
+        setDiscoverResults(categorizedItems);
       })
       .catch(error => {
         console.error("Error fetching electronics:", error);
@@ -118,9 +140,25 @@ export default function App() {
     </View>
   );
 
-  // render discovered items inside productListingContainer when discoverButton is clicked
-  const renderDiscoverItems = () => {
-    //
+  // render discover results inside productListingContainer when discoverButton is pressed
+  const renderDiscoverResults = () => {
+    // maps through each brand in discoverResults object
+    return Object.keys(discoverResults).map(brand => (
+      // container for each brand
+      <View key = {brand}>
+        <Text style = {styles.brandTitle}>{brand}</Text>
+        <ScrollView horizontal = {true}>
+          {/* maps through each item belonging to the current brand */}
+          {discoverResults[brand].map((item, index) => (
+            <View key = {`${brand}_${index}`} style = {styles.productItem}>
+              <Image source = {{ uri: item.product.main_image }} style = {styles.productImg}/>
+              <Text style = {styles.productTitle}>{item.product.title}</Text>
+              <Text style = {styles.productPrice}>{"$" + item.offers.primary.price}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    ));
   };
 
   return (
@@ -137,7 +175,7 @@ export default function App() {
         </View>
         <View style = {styles.discoverButton}>
           <Ionicons name = "compass-outline" size = {50} color = "black"
-           onPress = {renderDiscoverItems}/>
+           onPress = {() => setDiscoverVisible(!discoverVisible)}/>
         </View>
         <View style = {styles.cartButton}>
           <MaterialCommunityIcons name = "cart-outline" size = {43} color = "black"
@@ -150,6 +188,12 @@ export default function App() {
       </View>
 
     <View style = {styles.productListingContainer}>
+      {/* handles the events/trigger renders for renderDiscoverResults() */}
+      {discoverVisible && (
+        <View style = {styles.discoverResultsContainer}>
+          {renderDiscoverResults()}
+        </View>
+      )}
       {!fontsLoaded && (
         <View style = {{flex: 1, justifyContent: "center", alignItems: "center"}}>
           {/* ActivityIndicator component used to indicate loading state */}
