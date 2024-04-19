@@ -37,7 +37,7 @@ export default function App() {
     // fetch product data only when fonts are loaded and the search button hasn't been pressed
     if(fontsLoaded && !searchPressed){
       // DO NOT CLICK THIS LINK UNLESS YOU WANT TO WASTE CREDITS ($)
-      axios.get("https://api.bluecartapi.com/request?api_key=AF50FD2213A445A2A117DE571BEF6BA0&search_term=electronics&type=search")
+      axios.get("https://api.bluecartapi.com/request?api_key=B8E347DCD54344BEA3523B3B085B1AC1&search_term=electronics&type=search")
       .then(response => {
         // get random index within range of search_results array
         const randomIndex = Math.floor(Math.random() * response.data.search_results.length);
@@ -58,7 +58,8 @@ export default function App() {
   const fetchSearchResults = useCallback((searchText) => { 
     // check if searchText is defined and not empty before making the API call
     if(searchText && searchText.trim() !== ""){
-      axios.get(`https://api.bluecartapi.com/request?api_key=AF50FD2213A445A2A117DE571BEF6BA0&search_term=${searchText}&type=search`) // use `` to allow string interpolation with ${}
+      // use `` to allow string interpolation with ${}
+      axios.get(`https://api.bluecartapi.com/request?api_key=B8E347DCD54344BEA3523B3B085B1AC1&search_term=${searchText}&type=search`) 
       .then(response => {
         setSearchResults(response.data.search_results);
       })
@@ -69,7 +70,7 @@ export default function App() {
       // clear search results if no results are found
       setSearchResults([]);
     }
-  },[]);
+  }, []);
 
   const categorizeItems = (items) => {
     // initialize empty object to hold categorized items
@@ -90,7 +91,7 @@ export default function App() {
   }
 
   const fetchDiscoverResults = useCallback(() => {
-    axios.get("https://api.bluecartapi.com/request?api_key=AF50FD2213A445A2A117DE571BEF6BA0&search_term=electronics&type=search")
+    axios.get("https://api.bluecartapi.com/request?api_key=B8E347DCD54344BEA3523B3B085B1AC1&search_term=electronics&type=search")
       .then(response => {
         const categorizedItems = categorizeItems(response.data.search_results);
         setDiscoverResults(categorizedItems);
@@ -125,6 +126,7 @@ export default function App() {
   };
 
   const handleSearch = () => {
+    // when user presses searchButton, set true to render search input and results
     setSearchPressed(true);
     fetchSearchResults(searchText);
   };
@@ -145,15 +147,16 @@ export default function App() {
     // maps through each brand in discoverResults object
     return Object.keys(discoverResults).map(brand => (
       // container for each brand
-      <View key = {brand}>
+      <View key = {brand} style = {styles.brandContainer}>
         <Text style = {styles.brandTitle}>{brand}</Text>
         <ScrollView horizontal = {true}>
           {/* maps through each item belonging to the current brand */}
           {discoverResults[brand].map((item, index) => (
-            <View key = {`${brand}_${index}`} style = {styles.productItem}>
-              <Image source = {{ uri: item.product.main_image }} style = {styles.productImg}/>
-              <Text style = {styles.productTitle}>{item.product.title}</Text>
-              <Text style = {styles.productPrice}>{"$" + item.offers.primary.price}</Text>
+            // if index is 0, apply firstDiscoverItem style
+            // else, set firstDiscoverItem style to null
+            <View key = {`${brand}_${index}`} style = {[styles.discoverItem, index === 0 ? styles.firstDiscoverItem: null]}>
+              <Image source = {{ uri: item.product.main_image }} style = {styles.discoverImg}/>
+              <Text style = {styles.discoverPrice}>{"$" + item.offers.primary.price}</Text>
             </View>
           ))}
         </ScrollView>
@@ -165,7 +168,11 @@ export default function App() {
     <GestureHandlerRootView style = {styles.container}>
       <View style = {styles.searchButton}>
         <AntDesign name = "search1" size = {35} color = "black"
-         onPress = {handleSearch}/>
+          onPress = {() => {
+            handleSearch();
+            setDiscoverVisible(false);
+          }}
+        />
       </View>
       
       <View style = {styles.taskbarContainer}>
@@ -175,7 +182,11 @@ export default function App() {
         </View>
         <View style = {styles.discoverButton}>
           <Ionicons name = "compass-outline" size = {50} color = "black"
-           onPress = {() => setDiscoverVisible(!discoverVisible)}/>
+            onPress = {() => {
+              setDiscoverVisible(true);
+              setSearchPressed(false);
+            }}
+          />  
         </View>
         <View style = {styles.cartButton}>
           <MaterialCommunityIcons name = "cart-outline" size = {43} color = "black"
@@ -187,67 +198,66 @@ export default function App() {
         </View>
       </View>
 
-    <View style = {styles.productListingContainer}>
-      {/* handles the events/trigger renders for renderDiscoverResults() */}
-      {discoverVisible && (
-        <View style = {styles.discoverResultsContainer}>
-          {renderDiscoverResults()}
-        </View>
-      )}
-      {!fontsLoaded && (
-        <View style = {{flex: 1, justifyContent: "center", alignItems: "center"}}>
-          {/* ActivityIndicator component used to indicate loading state */}
-          <ActivityIndicator size = "large" color = {colors.taskbarContainerColor}/> 
-        </View>
-      )}
-      {searchPressed && (
-        <View style = {styles.searchContainer}>
-          <View style = {styles.searchIcon}>
-            <Feather name = "edit-3" size = {30} color = {colors.lightbrown}/>
+      <View style = {styles.productListingContainer}>
+        {!fontsLoaded && (
+          <View style = {{flex: 1, justifyContent: "center", alignItems: "center"}}>
+            {/* ActivityIndicator component used to indicate loading state */}
+            <ActivityIndicator size = "large" color = {colors.taskbarContainerColor}/> 
           </View>
-          <TextInput
-            style = {styles.searchInput}
-            onChangeText = {setSearchText}
-            value = {searchText}
-            placeholder = "Search for products..."
-            placeholderTextColor = {colors.taskbarContainerColor}
-          />
-        </View>
-      )}
-      {/* if searchPressed, render search input by running the code below */}
-      {/* else, continue with the "productImg && productTitle && productPrice" code */}
-      {searchPressed ? (
-        <ScrollView style = {styles.scrollView}>
-          <View style = {styles.searchDataContainer}>
-          {/* mapping through searchResults to render each product with their specific index which fixes the duplicate products (non-unique keys) issue */}
-            {searchResults.map((result, index) => (
-              <Swipeable key = {`${result.product.item_id}_${index}`} renderRightActions = {() => renderRightActions(result.product.item_id)}>
-                <View style = {styles.imgContainer}>
-                  <Image source = {{ uri: result.product.main_image }} style = {styles.productSearchImg}/>
-                </View>
-                <Text style = {styles.productSearchTitle}>{result.product.title}</Text>
-                <Text style = {styles.productSearchPrice}>{"$" + result.offers.primary.price}</Text>
-              </Swipeable>
-            ))}
+        )}
+        {discoverVisible && (
+          <View style = {styles.discoverResultsContainer}>
+            {renderDiscoverResults()}
           </View>
-        </ScrollView>
-      ) : (
-      productImg && productTitle && productPrice && (
-        <View style = {styles.productItem}>
-          <Image source = {{ uri: productImg }} style = {styles.productImg}/>
-          <Text style = {styles.productTitle}>{productTitle}</Text>
-          <Text style = {styles.productPrice}>{productPrice}</Text>
-          <View style = {styles.productButtonsContainer}>
-            <View style = {[styles.productAcceptButton, styles.buttonElevation]}>
-              <MaterialIcons name = "add-shopping-cart" size = {45} color = "green" onPress = {handleAcceptProduct}/>
+        )}
+        {searchPressed && (
+          <>
+            {/* for search input */}
+            <View style = {styles.searchContainer}>
+              <View style = {styles.searchIcon}>
+                <Feather name = "edit-3" size = {30} color = {colors.lightbrown}/>
+              </View>
+              <TextInput
+                style = {styles.searchInput}
+                onChangeText = {setSearchText}
+                value = {searchText}
+                placeholder = "Search for products..."
+                placeholderTextColor = {colors.taskbarContainerColor}
+              />
             </View>
-            <View style = {[styles.productDeclineButton, styles.buttonElevation]}>
-              <Ionicons name = "trash-outline" size = {45} color = "red" onPress = {handleDeclineProduct}/>
+            {/* for search results */}
+            <ScrollView style = {styles.scrollView}>
+              <View style = {styles.searchDataContainer}>
+              {/* maps through searchResults to render each product with their specific index, fixing the duplicate products (non-unique keys) issue */}
+                {searchResults.map((result, index) => (
+                  <Swipeable key = {`${result.product.item_id}_${index}`} renderRightActions = {() => renderRightActions(result.product.item_id)}>
+                    <View style = {styles.imgContainer}>
+                      <Image source = {{ uri: result.product.main_image }} style = {styles.productSearchImg}/>
+                    </View>
+                    <Text style = {styles.productSearchTitle}>{result.product.title}</Text>
+                    <Text style = {styles.productSearchPrice}>{"$" + result.offers.primary.price}</Text>
+                  </Swipeable>
+                ))}
+              </View>
+            </ScrollView>
+          </>
+        )}
+        {!searchPressed && !discoverVisible && productImg && productTitle && productPrice && (
+          <View style = {styles.productItem}>
+            <Image source = {{ uri: productImg }} style = {styles.productImg}/>
+            <Text style = {styles.productTitle}>{productTitle}</Text>
+            <Text style = {styles.productPrice}>{productPrice}</Text>
+            <View style = {styles.productButtonsContainer}>
+              <View style = {[styles.productAcceptButton, styles.buttonElevation]}>
+                <MaterialIcons name = "add-shopping-cart" size = {45} color = "green" onPress = {handleAcceptProduct}/>
+              </View>
+              <View style = {[styles.productDeclineButton, styles.buttonElevation]}>
+                <Ionicons name = "trash-outline" size = {45} color = "red" onPress = {handleDeclineProduct}/>
+              </View>
             </View>
           </View>
-        </View>
-      ))}
-    </View>
+        )}
+      </View>
       <StatusBar style = "auto"/>
     </GestureHandlerRootView>
   );
@@ -390,6 +400,43 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontFamily: "lexend-regular",
     color: colors.taskbarContainerColor, 
+  },
+  discoverResultsContainer: {
+    marginBottom: 10,
+  },
+  brandContainer: {
+    marginBottom: 10,
+  },
+  brandTitle: {
+    fontSize: 20,
+    fontFamily: "lexend-semibold",
+    color: colors.taskbarContainerColor,
+    marginTop: 10,
+    marginLeft: 20,
+  },
+  discoverItem: {
+    flexDirection: "column",
+    alignItems: "center",
+    paddingHorizontal: 20, 
+    marginLeft: -20, // counteract paddingHorizontal with negative margin  
+  },
+  // apply only to the first elements of their respective brand arrays
+  firstDiscoverItem: {
+    marginLeft: 0, 
+  },
+  discoverImg: {
+    marginTop: 10,
+    width: 150,
+    height: 150,
+    resizeMode: "cover",
+    borderRadius: 10,
+  },
+  discoverPrice: {
+    marginTop: 5, 
+    fontSize: 30, 
+    fontFamily: "lexend-regular",
+    textAlign: "center",
+    color: colors.taskbarContainerColor,
   },
   productSearchButtonsContainer: {
     flexDirection: "row",
