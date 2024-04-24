@@ -14,9 +14,8 @@ const getFonts = () => Font.loadAsync({
 });
 
 export default function App() {
-  // track whether these variables have been loaded/fetched
+  // track whether custom fonts have been loaded
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const [fetchingDiscoverData, setFetchingDiscoverData] = useState(false);
 
   // hold product data
   const [productImg, setProductImg] = useState(null);
@@ -38,7 +37,7 @@ export default function App() {
     // fetch product data only when fonts are loaded and the search button hasn't been pressed
     if(fontsLoaded && !searchPressed){
       // DO NOT CLICK THIS LINK UNLESS YOU WANT TO WASTE CREDITS ($)
-      axios.get("https://api.bluecartapi.com/request?api_key=2A851E89FF67426581068407776378CB&search_term=electronics&type=search")
+      axios.get("https://api.bluecartapi.com/request?api_key=D2B6B273009542F29A5BA26B69C6281B&search_term=electronics&type=search")
       .then(response => {
         // get random index within range of search_results array
         const randomIndex = Math.floor(Math.random() * response.data.search_results.length);
@@ -60,7 +59,7 @@ export default function App() {
     // check if searchText is defined and not empty before making the API call
     if(searchText && searchText.trim() !== ""){
       // use `` to allow string interpolation with ${}
-      axios.get(`https://api.bluecartapi.com/request?api_key=2A851E89FF67426581068407776378CB&search_term=${searchText}&type=search`) 
+      axios.get(`https://api.bluecartapi.com/request?api_key=D2B6B273009542F29A5BA26B69C6281B&search_term=${searchText}&type=search`) 
       .then(response => {
         setSearchResults(response.data.search_results);
       })
@@ -73,14 +72,12 @@ export default function App() {
     }
   }, []);
 
-  const fetchDiscoverResults = useCallback(() => {
-    // set to true once fetching begins
-    setFetchingDiscoverData(true); 
-    const searchTerms = ["iPhone", "Samsung", "Beats", "LG", "Sony", "Nintendo", "Google", "Motorola", "Onn"];
+  const fetchDiscoverResults = useCallback(() => { 
+    const searchTerms = ["GeForce", "iBUYPOWER", "iPhone", "MSI", "Pixel", "PlayStation", "Razer", "Samsung", "SteelSeries"];
   
     // holds requests for each search term
     const searchRequests = searchTerms.map(searchTerm =>
-      axios.get(`https://api.bluecartapi.com/request?api_key=2A851E89FF67426581068407776378CB&search_term=${searchTerm}&type=search`)
+      axios.get(`https://api.bluecartapi.com/request?api_key=D2B6B273009542F29A5BA26B69C6281B&search_term=${searchTerm}&type=search`)
       .then(response => response.data.search_results)
     );
 
@@ -98,13 +95,9 @@ export default function App() {
         });
       // update state with categorized items
       setDiscoverResults(categorizedItems);
-      // set to false when fetching ends
-      setFetchingDiscoverData(false); 
     })
     .catch(error => {
       console.error("Error fetching discover results:", error);
-      // set to false in case of error
-      setFetchingDiscoverData(false); 
     });
   }, []);
 
@@ -151,20 +144,12 @@ export default function App() {
 
   // render discover results inside productListingContainer when discoverButton is pressed
   const renderDiscoverResults = () => {
-    // indicate loading state if data is not fetched or trying to be fetched
-    if(fetchingDiscoverData){ 
-      return(
-        <View style = {[styles.loadingContainer, styles.loadingOverlay]}>
-          <ActivityIndicator size = "large" color = {colors.taskbarContainerColor}/>
-        </View>
-      );
-    }
     return (
       <ScrollView vertical = {true}>
         {/* maps through each brand in discoverResults array */}
         {Object.keys(discoverResults).map(brand => (
-          // container for each brand 
-          <View key = {brand} style = {styles.brandContainer}>
+          // each brand serves as a unique identifier for the rendered items
+          <View key = {brand}>
             <Text style = {styles.brandTitle}>{brand}</Text>
             <ScrollView horizontal = {true}>
               {/* maps through each item belonging to the current brand */}
@@ -341,17 +326,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     backgroundColor: colors.productListingContainerColor,
   },
-  loadingContainer: {
-    position: "absolute",
-    zIndex: 1,
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingOverlay: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)', // semi-transparent white background
-  },
   productItem: {
     flexDirection: "column",
     alignItems: "center",
@@ -432,9 +406,6 @@ const styles = StyleSheet.create({
     color: colors.taskbarContainerColor, 
   },
   discoverResultsContainer: {
-    marginBottom: 10,
-  },
-  brandContainer: {
     marginBottom: 10,
   },
   brandTitle: {
