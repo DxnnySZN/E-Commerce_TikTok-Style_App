@@ -14,30 +14,31 @@ const getFonts = () => Font.loadAsync({
 });
 
 export default function App() {
-  // track whether custom fonts have been loaded
+  // track whether these variables have been loaded/fetched
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [fetchingDiscoverData, setFetchingDiscoverData] = useState(false);
 
   // hold product data
   const [productImg, setProductImg] = useState(null);
   const [productTitle, setProductTitle] = useState(null);
   const [productPrice, setProductPrice] = useState(null);
 
-  // track whether the search button has been pressed 
+  // track whether these buttons have been pressed 
   const [searchPressed, setSearchPressed] = useState(false);
+  const [discoverVisible, setDiscoverVisible] = useState(false);
+
   // hold the text entered in the search input
   const [searchText, setSearchText] = useState("");
 
+  // hold results
   const [searchResults, setSearchResults] = useState([]);
   const [discoverResults, setDiscoverResults] = useState([]);
   
-  // track whether the discover button has been pressed
-  const [discoverVisible, setDiscoverVisible] = useState(false);
-
   const fetchNewProduct = useCallback(() => { // useCallback prevents fetching of new products during each render
     // fetch product data only when fonts are loaded and the search button hasn't been pressed
     if(fontsLoaded && !searchPressed){
       // DO NOT CLICK THIS LINK UNLESS YOU WANT TO WASTE CREDITS ($)
-      axios.get("https://api.bluecartapi.com/request?api_key=B8E347DCD54344BEA3523B3B085B1AC1&search_term=electronics&type=search")
+      axios.get("https://api.bluecartapi.com/request?api_key=2A851E89FF67426581068407776378CB&search_term=electronics&type=search")
       .then(response => {
         // get random index within range of search_results array
         const randomIndex = Math.floor(Math.random() * response.data.search_results.length);
@@ -59,7 +60,7 @@ export default function App() {
     // check if searchText is defined and not empty before making the API call
     if(searchText && searchText.trim() !== ""){
       // use `` to allow string interpolation with ${}
-      axios.get(`https://api.bluecartapi.com/request?api_key=B8E347DCD54344BEA3523B3B085B1AC1&search_term=${searchText}&type=search`) 
+      axios.get(`https://api.bluecartapi.com/request?api_key=2A851E89FF67426581068407776378CB&search_term=${searchText}&type=search`) 
       .then(response => {
         setSearchResults(response.data.search_results);
       })
@@ -72,33 +73,39 @@ export default function App() {
     }
   }, []);
 
-  const categorizeItems = (items) => {
-    // initialize empty object to hold categorized items
-    const categorizedItems = {};
-
-    for(let i = 0; i < items.length; i++){
-      // extract current item and its brand
-      const item = items[i];
-      const brand = item.product.brand;
-
-      // if brand doesn't exist in categorizedItems, create empty array for it
-      if(!categorizedItems[brand]){
-        categorizedItems[brand] = [];
-      }
-      categorizedItems[brand].push(item);
-    }
-    return categorizedItems;
-  }
-
   const fetchDiscoverResults = useCallback(() => {
-    axios.get("https://api.bluecartapi.com/request?api_key=B8E347DCD54344BEA3523B3B085B1AC1&search_term=electronics&type=search")
-      .then(response => {
-        const categorizedItems = categorizeItems(response.data.search_results);
-        setDiscoverResults(categorizedItems);
-      })
-      .catch(error => {
-        console.error("Error fetching electronics:", error);
-      });
+    // set to true once fetching begins
+    setFetchingDiscoverData(true); 
+    const searchTerms = ["iPhone", "Samsung", "Beats", "LG", "Sony", "Nintendo", "Google", "Motorola", "Onn"];
+  
+    // holds requests for each search term
+    const searchRequests = searchTerms.map(searchTerm =>
+      axios.get(`https://api.bluecartapi.com/request?api_key=2A851E89FF67426581068407776378CB&search_term=${searchTerm}&type=search`)
+      .then(response => response.data.search_results)
+    );
+
+    // Promise.all waits until all tasks are completed and then reports back the results
+    Promise.all(searchRequests).then(searchResultsArray => {
+      const categorizedItems = {};
+
+      // iterate over each searchTerm and its corresponding results
+      searchTerms.forEach((searchTerm, index) => {
+        const brand = searchTerm;
+        const searchResults = searchResultsArray[index];
+
+        // add searchResults to the array for the corresponding brand
+          categorizedItems[brand] = searchResults;
+        });
+      // update state with categorized items
+      setDiscoverResults(categorizedItems);
+      // set to false when fetching ends
+      setFetchingDiscoverData(false); 
+    })
+    .catch(error => {
+      console.error("Error fetching discover results:", error);
+      // set to false in case of error
+      setFetchingDiscoverData(false); 
+    });
   }, []);
 
   // makes sure getFonts() does its job and then runs the rest of the effect
@@ -144,24 +151,36 @@ export default function App() {
 
   // render discover results inside productListingContainer when discoverButton is pressed
   const renderDiscoverResults = () => {
-    // maps through each brand in discoverResults object
-    return Object.keys(discoverResults).map(brand => (
-      // container for each brand
-      <View key = {brand} style = {styles.brandContainer}>
-        <Text style = {styles.brandTitle}>{brand}</Text>
-        <ScrollView horizontal = {true}>
-          {/* maps through each item belonging to the current brand */}
-          {discoverResults[brand].map((item, index) => (
-            // if index is 0, apply firstDiscoverItem style
-            // else, set firstDiscoverItem style to null
-            <View key = {`${brand}_${index}`} style = {[styles.discoverItem, index === 0 ? styles.firstDiscoverItem: null]}>
-              <Image source = {{ uri: item.product.main_image }} style = {styles.discoverImg}/>
-              <Text style = {styles.discoverPrice}>{"$" + item.offers.primary.price}</Text>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-    ));
+    // indicate loading state if data is not fetched or trying to be fetched
+    if(fetchingDiscoverData){ 
+      return(
+        <View style = {[styles.loadingContainer, styles.loadingOverlay]}>
+          <ActivityIndicator size = "large" color = {colors.taskbarContainerColor}/>
+        </View>
+      );
+    }
+    return (
+      <ScrollView vertical = {true}>
+        {/* maps through each brand in discoverResults array */}
+        {Object.keys(discoverResults).map(brand => (
+          // container for each brand 
+          <View key = {brand} style = {styles.brandContainer}>
+            <Text style = {styles.brandTitle}>{brand}</Text>
+            <ScrollView horizontal = {true}>
+              {/* maps through each item belonging to the current brand */}
+              {Array.isArray(discoverResults[brand]) && discoverResults[brand].map((item, index) => (
+                // if index is 0, apply firstDiscoverItem style
+                // else, set firstDiscoverItem style to null
+                <View key = {`${brand}_${index}`} style = {[styles.discoverItem, index === 0 ? styles.firstDiscoverItem : null]}>
+                  <Image source = {{ uri: item.product.main_image }} style = {styles.discoverImg}/>
+                  <Text style = {styles.discoverPrice}>{"$" + item.offers.primary.price}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        ))}
+      </ScrollView>
+    );
   };
 
   return (
@@ -321,6 +340,17 @@ const styles = StyleSheet.create({
     marginRight: "auto", 
     marginTop: 10,
     backgroundColor: colors.productListingContainerColor,
+  },
+  loadingContainer: {
+    position: "absolute",
+    zIndex: 1,
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingOverlay: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)', // semi-transparent white background
   },
   productItem: {
     flexDirection: "column",
