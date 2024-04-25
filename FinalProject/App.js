@@ -37,7 +37,7 @@ export default function App() {
     // fetch product data only when fonts are loaded and the search button hasn't been pressed
     if(fontsLoaded && !searchPressed){
       // DO NOT CLICK THIS LINK UNLESS YOU WANT TO WASTE CREDITS ($)
-      axios.get("https://api.bluecartapi.com/request?api_key=D2B6B273009542F29A5BA26B69C6281B&search_term=electronics&type=search")
+      axios.get("https://api.bluecartapi.com/request?api_key=2B74C8E5B99D4673AB7C756939E44391&search_term=electronics&type=search")
       .then(response => {
         // get random index within range of search_results array
         const randomIndex = Math.floor(Math.random() * response.data.search_results.length);
@@ -59,7 +59,7 @@ export default function App() {
     // check if searchText is defined and not empty before making the API call
     if(searchText && searchText.trim() !== ""){
       // use `` to allow string interpolation with ${}
-      axios.get(`https://api.bluecartapi.com/request?api_key=D2B6B273009542F29A5BA26B69C6281B&search_term=${searchText}&type=search`) 
+      axios.get(`https://api.bluecartapi.com/request?api_key=2B74C8E5B99D4673AB7C756939E44391&search_term=${searchText}&type=search`) 
       .then(response => {
         setSearchResults(response.data.search_results);
       })
@@ -77,7 +77,7 @@ export default function App() {
   
     // holds requests for each search term
     const searchRequests = searchTerms.map(searchTerm =>
-      axios.get(`https://api.bluecartapi.com/request?api_key=D2B6B273009542F29A5BA26B69C6281B&search_term=${searchTerm}&type=search`)
+      axios.get(`https://api.bluecartapi.com/request?api_key=2B74C8E5B99D4673AB7C756939E44391&search_term=${searchTerm}&type=search`)
       .then(response => response.data.search_results)
     );
 
@@ -154,18 +154,30 @@ export default function App() {
             <ScrollView horizontal = {true}>
               {/* maps through each item belonging to the current brand */}
               {Array.isArray(discoverResults[brand]) && discoverResults[brand].map((item, index) => (
-                // if index is 0, apply firstDiscoverItem style
-                // else, set firstDiscoverItem style to null
-                <View key = {`${brand}_${index}`} style = {[styles.discoverItem, index === 0 ? styles.firstDiscoverItem : null]}>
-                  <Image source = {{ uri: item.product.main_image }} style = {styles.discoverImg}/>
-                  <Text style = {styles.discoverPrice}>{"$" + item.offers.primary.price}</Text>
-                </View>
+                <TouchableOpacity key = {`${brand}_${index}`} onPress = {() => handleDiscoverItemClick(item)}> 
+                  {/* if index is 0, apply firstDiscoverItem style 
+                  else, set firstDiscoverItem style to null */}
+                  <View key = {`${brand}_${index}`} style = {[styles.discoverItem, index === 0 ? styles.firstDiscoverItem : null]}>
+                    <Image source = {{ uri: item.product.main_image }} style = {styles.discoverImg}/>
+                    <Text style = {styles.discoverPrice}>{"$" + item.offers.primary.price}</Text>
+                  </View>
+                </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
         ))}
       </ScrollView>
     );
+  };
+
+  // if user is interested in a discover item and presses it, 
+  // user will be brought back to the home FYP with the discover item's information displayed
+  const handleDiscoverItemClick = (item) => {
+    setProductImg(item.product.main_image);
+    setProductTitle(item.product.title);
+    setProductPrice("$" + item.offers.primary.price);
+    setSearchPressed(false);
+    setDiscoverVisible(false);
   };
 
   return (
