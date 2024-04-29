@@ -25,6 +25,7 @@ export default function App() {
   // track whether these buttons have been pressed 
   const [searchPressed, setSearchPressed] = useState(false);
   const [discoverVisible, setDiscoverVisible] = useState(false);
+  const [cartPressed, setCartPressed] = useState(false);
 
   // hold the text entered in the search input
   const [searchText, setSearchText] = useState("");
@@ -32,6 +33,9 @@ export default function App() {
   // hold results
   const [searchResults, setSearchResults] = useState([]);
   const [discoverResults, setDiscoverResults] = useState([]);
+
+  // hold user's desired products
+  const [acceptedProducts, setAcceptedProducts] = useState([]);
   
   const fetchNewProduct = useCallback(() => { // useCallback prevents fetching of new products during each render
     // fetch product data only when fonts are loaded and the search button hasn't been pressed
@@ -112,6 +116,10 @@ export default function App() {
 
   const handleAcceptProduct = () => {
     fetchNewProduct();
+    if(productImg && productTitle && productPrice){
+      // "..." creates a new array by copying the values from an existing array
+      setAcceptedProducts([...acceptedProducts, { img: productImg, title: productTitle, price: productPrice }]);
+    }
   };
 
   const handleDeclineProduct = () => {
@@ -168,6 +176,21 @@ export default function App() {
         ))}
       </ScrollView>
     );
+
+    // render user's desired products inside productListingContainer when cartButton is pressed
+    const renderAcceptedProducts = () => {
+      return(
+        <View>
+          {acceptedProducts.map((product, index) => (
+            <View key = {index}>
+              <Image source = {{ uri: product.img }}/>
+              <Text>{product.title}</Text>
+              <Text>{product.price}</Text>
+            </View>
+          ))}
+        </View>
+      )
+    };
   };
 
   // if user is interested in a discover item and presses it, 
@@ -206,7 +229,7 @@ export default function App() {
         </View>
         <View style = {styles.cartButton}>
           <MaterialCommunityIcons name = "cart-outline" size = {43} color = "black"
-           onPress = {() => console.log("button pressed")}/>
+           onPress = {() => setCartPressed(true)}/>
         </View>
         <View style = {styles.profileButton}>
           <Octicons name = "person" size = {43} color = "black"
@@ -219,6 +242,11 @@ export default function App() {
           <View style = {{flex: 1, justifyContent: "center", alignItems: "center"}}>
             {/* ActivityIndicator component used to indicate loading state */}
             <ActivityIndicator size = "large" color = {colors.taskbarContainerColor}/> 
+          </View>
+        )}
+        {cartPressed && (
+          <View style = {styles.acceptedProductsContainer}>
+            {renderAcceptedProducts()}
           </View>
         )}
         {discoverVisible && (
