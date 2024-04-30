@@ -41,7 +41,7 @@ export default function App() {
     // fetch product data only when fonts are loaded and the search button hasn't been pressed
     if(fontsLoaded && !searchPressed){
       // DO NOT CLICK THIS LINK UNLESS YOU WANT TO WASTE CREDITS ($)
-      axios.get("https://api.bluecartapi.com/request?api_key=2B74C8E5B99D4673AB7C756939E44391&search_term=electronics&type=search")
+      axios.get("https://api.bluecartapi.com/request?api_key=1F27C658D8ED4245B95E09DB26FAABD4&search_term=electronics&type=search")
       .then(response => {
         // get random index within range of search_results array
         const randomIndex = Math.floor(Math.random() * response.data.search_results.length);
@@ -63,7 +63,7 @@ export default function App() {
     // check if searchText is defined and not empty before making the API call
     if(searchText && searchText.trim() !== ""){
       // use `` to allow string interpolation with ${}
-      axios.get(`https://api.bluecartapi.com/request?api_key=2B74C8E5B99D4673AB7C756939E44391&search_term=${searchText}&type=search`) 
+      axios.get(`https://api.bluecartapi.com/request?api_key=1F27C658D8ED4245B95E09DB26FAABD4&search_term=${searchText}&type=search`) 
       .then(response => {
         setSearchResults(response.data.search_results);
       })
@@ -81,7 +81,7 @@ export default function App() {
   
     // holds requests for each search term
     const searchRequests = searchTerms.map(searchTerm =>
-      axios.get(`https://api.bluecartapi.com/request?api_key=2B74C8E5B99D4673AB7C756939E44391&search_term=${searchTerm}&type=search`)
+      axios.get(`https://api.bluecartapi.com/request?api_key=1F27C658D8ED4245B95E09DB26FAABD4&search_term=${searchTerm}&type=search`)
       .then(response => response.data.search_results)
     );
 
@@ -139,7 +139,7 @@ export default function App() {
     fetchSearchResults(searchText);
   };
 
-  const renderRightActions = (itemId) => (
+  const renderRightActions = (itemId) => {
     <View style={styles.rightActionsContainer}>
       <TouchableOpacity onPress = {() => handleSearchProduct(itemId)} style = {[styles.rightAction, styles.acceptAction]}>
         <MaterialIcons name = "check" size = {30} color = "white"/>
@@ -148,7 +148,7 @@ export default function App() {
         <MaterialIcons name = "close" size = {30} color = "white"/>
       </TouchableOpacity>
     </View>
-  );
+  };
 
   // render discover results inside productListingContainer when discoverButton is pressed
   const renderDiscoverResults = () => {
@@ -175,24 +175,24 @@ export default function App() {
           </View>
         ))}
       </ScrollView>
-    );
-
-    // render user's desired products inside productListingContainer when cartButton is pressed
-    const renderAcceptedProducts = () => {
-      return(
-        <View>
-          {acceptedProducts.map((product, index) => (
-            <View key = {index}>
-              <Image source = {{ uri: product.img }}/>
-              <Text>{product.title}</Text>
-              <Text>{product.price}</Text>
-            </View>
-          ))}
-        </View>
-      )
-    };
+    )
   };
 
+  // render user's desired products inside productListingContainer when cartButton is pressed
+  const renderAcceptedProducts = () => {
+    return (
+      <View>
+        {acceptedProducts.map((product, index) => (
+          <View key = {index}>
+            <Image source = {{ uri: product.img }}/>
+            <Text>{product.title}</Text>
+            <Text>{product.price}</Text>
+          </View>
+        ))}
+      </View>
+    )
+  };
+  
   // if user is interested in a discover item and presses it, 
   // user will be brought back to the home FYP with the discover item's information displayed
   const handleDiscoverItemClick = (item) => {
