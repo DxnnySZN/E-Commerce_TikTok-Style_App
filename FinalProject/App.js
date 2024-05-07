@@ -36,12 +36,15 @@ export default function App() {
 
   // hold user's desired products
   const [acceptedProducts, setAcceptedProducts] = useState([]);
-  
+
+  // track if user accessed FYP from DiscoverPage
+  const [accessedFromDiscover, setAccessedFromDiscover] = useState(false);
+
   const fetchNewProduct = useCallback(() => { // useCallback prevents fetching of new products during each render
     // fetch product data only when fonts are loaded and the search button hasn't been pressed
     if(fontsLoaded && !searchPressed){
       // DO NOT CLICK THIS LINK UNLESS YOU WANT TO WASTE CREDITS ($)
-      axios.get("https://api.bluecartapi.com/request?api_key=1F27C658D8ED4245B95E09DB26FAABD4&search_term=electronics&type=search")
+      axios.get("https://api.bluecartapi.com/request?api_key=236061A671534CF3A837B7FCC6D31D5D&search_term=electronics&type=search")
       .then(response => {
         // get random index within range of search_results array
         const randomIndex = Math.floor(Math.random() * response.data.search_results.length);
@@ -63,7 +66,7 @@ export default function App() {
     // check if searchText is defined and not empty before making the API call
     if(searchText && searchText.trim() !== ""){
       // use `` to allow string interpolation with ${}
-      axios.get(`https://api.bluecartapi.com/request?api_key=1F27C658D8ED4245B95E09DB26FAABD4&search_term=${searchText}&type=search`) 
+      axios.get(`https://api.bluecartapi.com/request?api_key=236061A671534CF3A837B7FCC6D31D5D&search_term=${searchText}&type=search`) 
       .then(response => {
         setSearchResults(response.data.search_results);
       })
@@ -81,7 +84,7 @@ export default function App() {
   
     // holds requests for each search term
     const searchRequests = searchTerms.map(searchTerm =>
-      axios.get(`https://api.bluecartapi.com/request?api_key=1F27C658D8ED4245B95E09DB26FAABD4&search_term=${searchTerm}&type=search`)
+      axios.get(`https://api.bluecartapi.com/request?api_key=236061A671534CF3A837B7FCC6D31D5D&search_term=${searchTerm}&type=search`)
       .then(response => response.data.search_results)
     );
 
@@ -120,34 +123,104 @@ export default function App() {
       // "..." creates a new array by copying the values from an existing array
       setAcceptedProducts([...acceptedProducts, { img: productImg, title: productTitle, price: productPrice }]);
     }
+    if(accessedFromDiscover){
+      setDiscoverVisible(true);
+    }
+    else{
+      setDiscoverVisible(false);
+    }
   };
 
   const handleDeclineProduct = () => {
     fetchNewProduct();
+    setDiscoverVisible(true);
+    if(accessedFromDiscover){
+      setDiscoverVisible(true);
+    }
+    else{
+      setDiscoverVisible(false);
+    }
   };
 
-  const handleSearchProduct = (itemId) => {
+  const handleHomeButtonPress = () => {
+    setSearchPressed(false);
+    setDiscoverVisible(false);
+    setCartPressed(false);
+  };
+
+  const handleSearchProduct = (itemId, accepted) => {
     // filter out item with corresponding itemId
     const updatedSearchResults = searchResults.filter(result => result.product.item_id !== itemId);
+    
     // update searchResults state with the filtered array
     setSearchResults(updatedSearchResults);
+
+    if(accepted){
+      // find acceptedProduct in searchResults based on itemId
+      const acceptedProduct = searchResults.find(result => result.product.item_id === itemId);
+  
+      // check if acceptedProduct is found and its data is available
+      if(acceptedProduct && acceptedProduct.product.main_image && acceptedProduct.product.title && acceptedProduct.offers.primary.price){
+        // follow same logic as handleAcceptProduct()
+        setAcceptedProducts(prevAcceptedProducts => [
+          ...prevAcceptedProducts,
+          {
+            img: acceptedProduct.product.main_image,
+            title: acceptedProduct.product.title,
+            price: `$${acceptedProduct.offers.primary.price}`
+          }
+        ]);
+      }
+    }
   };
 
   const handleSearch = () => {
     // when user presses searchButton, set true to render search input and results
     setSearchPressed(true);
     fetchSearchResults(searchText);
+    setDiscoverVisible(false);
+    setCartPressed(false);
+  };
+
+  const handleDiscover = () => {
+    setAccessedFromDiscover(false); 
+    setDiscoverVisible(true);
+    setSearchPressed(false);
+    setCartPressed(false);
+  };   
+
+  // if user is interested in a discover item and presses it, 
+  // user will be brought back to the home FYP with the discover item's information displayed
+  const handleDiscoverItemClick = (item) => {
+    // set true to indicate that the user accessed FYP from DiscoverPage
+    setAccessedFromDiscover(true);
+    
+    setProductImg(item.product.main_image);
+    setProductTitle(item.product.title);
+    setProductPrice("$" + item.offers.primary.price);
+
+    setSearchPressed(false);
+    setDiscoverVisible(false);
+    setCartPressed(false);
+  };
+
+  const handleCart = () => {
+    setCartPressed(true);
+    setSearchPressed(false);
+    setDiscoverVisible(false);
   };
 
   const renderRightActions = (itemId) => {
-    <View style={styles.rightActionsContainer}>
-      <TouchableOpacity onPress = {() => handleSearchProduct(itemId)} style = {[styles.rightAction, styles.acceptAction]}>
-        <MaterialIcons name = "check" size = {30} color = "white"/>
-      </TouchableOpacity>
-      <TouchableOpacity onPress = {() => handleSearchProduct(itemId)} style = {[styles.rightAction, styles.declineAction]}>
-        <MaterialIcons name = "close" size = {30} color = "white"/>
-      </TouchableOpacity>
-    </View>
+    return (
+      <View style={styles.rightActionsContainer}>
+        <TouchableOpacity onPress = {() => handleSearchProduct(itemId, true)} style = {[styles.rightAction, styles.acceptAction]}>
+          <MaterialIcons name = "check" size = {30} color = "white"/>
+        </TouchableOpacity>
+        <TouchableOpacity onPress = {() => handleSearchProduct(itemId, false)} style = {[styles.rightAction, styles.declineAction]}>
+          <MaterialIcons name = "close" size = {30} color = "white"/>
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   // render discover results inside productListingContainer when discoverButton is pressed
@@ -160,8 +233,8 @@ export default function App() {
           <View key = {brand}>
             <Text style = {styles.brandTitle}>{brand}</Text>
             <ScrollView horizontal = {true}>
-              {/* maps through each item belonging to the current brand */}
-              {Array.isArray(discoverResults[brand]) && discoverResults[brand].map((item, index) => (
+              {/* maps through each item belonging to the current brand that is not $0 */}
+              {Array.isArray(discoverResults[brand]) && discoverResults[brand].filter(item => item.offers.primary.price !== "$0").map((item, index) => (
                 <TouchableOpacity key = {`${brand}_${index}`} onPress = {() => handleDiscoverItemClick(item)}> 
                   {/* if index is 0, apply firstDiscoverItem style 
                   else, set firstDiscoverItem style to null */}
@@ -181,55 +254,53 @@ export default function App() {
   // render user's desired products inside productListingContainer when cartButton is pressed
   const renderAcceptedProducts = () => {
     return (
-      <View>
+      <ScrollView vertical = {true}>
         {acceptedProducts.map((product, index) => (
-          <View key = {index}>
-            <Image source = {{ uri: product.img }}/>
-            <Text>{product.title}</Text>
-            <Text>{product.price}</Text>
+          <View key = {index} style = {styles.acceptedProductContainer}>
+            <View style = {styles.productInfoContainer}>
+              <Image source = {{ uri: product.img }} style = {styles.acceptedProductImg}/>
+              <View style = {styles.productTextContainer}>
+                <Text style = {styles.acceptedProductTitle}>{product.title}</Text>
+                <Text style = {styles.acceptedProductPrice}>{product.price}</Text>
+              </View>
+            </View>
+            <View style = {styles.divider}/>
+            <Swipeable renderRightActions = {() => (
+              <View style = {styles.rightActionsContainer}>
+                <TouchableOpacity onPress = {() => handleViewOnWalmart(product)} style = {[styles.rightAction, styles.acceptAction]}>
+                  <MaterialIcons name = "check" size = {30} color = "white"/>
+                </TouchableOpacity>
+                <TouchableOpacity onPress = {() => handleRemoveProduct(index)} style = {[styles.rightAction, styles.declineAction]}>
+                  <MaterialIcons name = "close" size = {30} color = "white"/>
+                </TouchableOpacity>
+              </View>
+            )}>
+            </Swipeable>
           </View>
         ))}
-      </View>
-    )
+      </ScrollView>
+    );
   };
   
-  // if user is interested in a discover item and presses it, 
-  // user will be brought back to the home FYP with the discover item's information displayed
-  const handleDiscoverItemClick = (item) => {
-    setProductImg(item.product.main_image);
-    setProductTitle(item.product.title);
-    setProductPrice("$" + item.offers.primary.price);
-    setSearchPressed(false);
-    setDiscoverVisible(false);
-  };
-
   return (
     <GestureHandlerRootView style = {styles.container}>
       <View style = {styles.searchButton}>
         <AntDesign name = "search1" size = {35} color = "black"
-          onPress = {() => {
-            handleSearch();
-            setDiscoverVisible(false);
-          }}
-        />
+         onPress = {() => handleSearch()}/>
       </View>
       
       <View style = {styles.taskbarContainer}>
         <View style = {styles.homeButton}>
           <Octicons name = "home" size = {40} color = "black"
-           onPress = {() => console.log("button pressed")}/>
+           onPress = {() => handleHomeButtonPress()}/>
         </View>
         <View style = {styles.discoverButton}>
           <Ionicons name = "compass-outline" size = {50} color = "black"
-            onPress = {() => {
-              setDiscoverVisible(true);
-              setSearchPressed(false);
-            }}
-          />  
+            onPress = {() => handleDiscover()}/> 
         </View>
         <View style = {styles.cartButton}>
           <MaterialCommunityIcons name = "cart-outline" size = {43} color = "black"
-           onPress = {() => setCartPressed(true)}/>
+           onPress = {() => handleCart()}/> 
         </View>
         <View style = {styles.profileButton}>
           <Octicons name = "person" size = {43} color = "black"
@@ -286,7 +357,7 @@ export default function App() {
             </ScrollView>
           </>
         )}
-        {!searchPressed && !discoverVisible && productImg && productTitle && productPrice && (
+        {!searchPressed && !discoverVisible && !cartPressed && productImg && productTitle && productPrice && (
           <View style = {styles.productItem}>
             <Image source = {{ uri: productImg }} style = {styles.productImg}/>
             <Text style = {styles.productTitle}>{productTitle}</Text>
@@ -507,5 +578,41 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 }, 
     shadowRadius: 4, 
     marginLeft: 5,
+  },
+  acceptedProductContainer: {
+    flexDirection: "column",
+    paddingHorizontal: 20,
+  },
+  productInfoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  productTextContainer: {
+    marginLeft: 10,
+    flex: 1,
+  },
+  acceptedProductImg: {
+    marginTop: 10,
+    marginBottom: 10,
+    width: 150,
+    height: 150,
+    borderRadius: 10,
+  },
+  acceptedProductTitle: {
+    fontSize: 10,
+    fontFamily: "lexend-semibold",
+    textAlign: "center",
+    color: colors.taskbarContainerColor,
+  },
+  acceptedProductPrice: {
+    marginTop: 5, 
+    fontSize: 30, 
+    fontFamily: "lexend-regular",
+    textAlign: "center",
+    color: colors.taskbarContainerColor,
+  },
+  divider: {
+    borderBottomColor: colors.lightbrown,
+    borderBottomWidth: 1,
   },
 });
