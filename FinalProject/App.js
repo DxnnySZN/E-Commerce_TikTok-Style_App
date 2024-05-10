@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, Image, ActivityIndicator, ScrollView, TouchableOpacity} from 'react-native';
+import { StyleSheet, Text, View, TextInput, Image, ActivityIndicator, ScrollView, TouchableOpacity, Linking} from 'react-native';
 import axios from 'axios'; // allows HTTP requests from both Node.js environments and web browsers, 
 // providing an easy-to-use API for making asynchronous HTTP requests to REST endpoints and interacting with web servers
 import { AntDesign, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons, Feather } from '@expo/vector-icons';
 import colors from './app/config/colors';
 import * as Font from 'expo-font';
 import { Swipeable, GestureHandlerRootView} from 'react-native-gesture-handler';
+import WalmartLogo from './app/assets/walmart_logo_icon.png'
 
 const getFonts = () => Font.loadAsync({
   "lexend-regular": require("./app/assets/fonts/Lexend-Regular.ttf"),
@@ -21,6 +22,10 @@ export default function App() {
   const [productImg, setProductImg] = useState(null);
   const [productTitle, setProductTitle] = useState(null);
   const [productPrice, setProductPrice] = useState(null);
+
+  // create so it can be accessible in handleViewOnWalmart()
+  // will not display to the user
+  const [productID, setProductID] = useState(null);
 
   // track whether these buttons have been pressed 
   const [searchPressed, setSearchPressed] = useState(false);
@@ -53,6 +58,7 @@ export default function App() {
         setProductImg(response.data.search_results[randomIndex].product.main_image);
         setProductTitle(response.data.search_results[randomIndex].product.title);
         setProductPrice("$" + response.data.search_results[randomIndex].offers.primary.price);
+        setProductID(response.data.search_results[randomIndex].product.product_id);
       })
       .catch(error => {
         console.log("Error status:", error.response.status);
@@ -73,7 +79,8 @@ export default function App() {
       .catch(error => {
         console.error("Error fetching search results:", error);
       });
-    } else {
+    }
+    else{
       // clear search results if no results are found
       setSearchResults([]);
     }
@@ -148,28 +155,30 @@ export default function App() {
     setCartPressed(false);
   };
 
-  const handleSearchProduct = (itemId, accepted) => {
-    // filter out item with corresponding itemId
-    const updatedSearchResults = searchResults.filter(result => result.product.item_id !== itemId);
+  const handleSearchProduct = (itemID, accepted) => {
+    // filter out item with corresponding itemID
+    const updatedSearchResults = searchResults.filter(result => result.product.item_id !== itemID);
     
     // update searchResults state with the filtered array
     setSearchResults(updatedSearchResults);
 
     if(accepted){
-      // find acceptedProduct in searchResults based on itemId
-      const acceptedProduct = searchResults.find(result => result.product.item_id === itemId);
+      // find acceptedProduct in searchResults based on itemID
+      const acceptedProduct = searchResults.find(result => result.product.item_id === itemID);
   
       // check if acceptedProduct is found and its data is available
-      if(acceptedProduct && acceptedProduct.product.main_image && acceptedProduct.product.title && acceptedProduct.offers.primary.price){
+      if(acceptedProduct && acceptedProduct.product.main_image && acceptedProduct.product.title && acceptedProduct.offers.primary.price && acceptedProduct.product.product_id){
         // follow same logic as handleAcceptProduct()
         setAcceptedProducts(prevAcceptedProducts => [
           ...prevAcceptedProducts,
           {
             img: acceptedProduct.product.main_image,
             title: acceptedProduct.product.title,
-            price: `$${acceptedProduct.offers.primary.price}`
+            price: `$${acceptedProduct.offers.primary.price}`,
+            id: acceptedProduct.product.product_id,
           }
         ]);
+        setProductID(acceptedProduct.product.product_id);
       }
     }
   };
@@ -183,8 +192,16 @@ export default function App() {
   };
 
   const handleDiscover = () => {
-    setAccessedFromDiscover(false); 
-    setDiscoverVisible(true);
+    // check if user has accessed FYP from DiscoverPage
+    const fromDiscover = discoverVisible;
+    
+    // set accessedFromDiscover based on whether user accessed FYP from DiscoverPage
+    setAccessedFromDiscover(fromDiscover);
+    
+    // toggle discover visibility
+    setDiscoverVisible(!discoverVisible);
+    
+    // reset other states
     setSearchPressed(false);
     setCartPressed(false);
   };   
@@ -198,6 +215,7 @@ export default function App() {
     setProductImg(item.product.main_image);
     setProductTitle(item.product.title);
     setProductPrice("$" + item.offers.primary.price);
+    setProductID(item.product.product_id)
 
     setSearchPressed(false);
     setDiscoverVisible(false);
@@ -210,19 +228,46 @@ export default function App() {
     setDiscoverVisible(false);
   };
 
-  const renderRightActions = (itemId) => {
+  const renderRightActions = (itemID) => {
     return (
       <View style={styles.rightActionsContainer}>
-        <TouchableOpacity onPress = {() => handleSearchProduct(itemId, true)} style = {[styles.rightAction, styles.acceptAction]}>
+        <TouchableOpacity onPress = {() => handleSearchProduct(itemID, true)} style = {[styles.rightAction, styles.acceptAction]}>
           <MaterialIcons name = "check" size = {30} color = "white"/>
         </TouchableOpacity>
-        <TouchableOpacity onPress = {() => handleSearchProduct(itemId, false)} style = {[styles.rightAction, styles.declineAction]}>
+        <TouchableOpacity onPress = {() => handleSearchProduct(itemID, false)} style = {[styles.rightAction, styles.declineAction]}>
           <MaterialIcons name = "close" size = {30} color = "white"/>
         </TouchableOpacity>
       </View>
     );
   };
 
+  const handleViewOnWalmart = (product) => {
+    const formattedTitle = product.title.replace(/\s+/g, '-'); // replace spaces with hyphens in the item title so the URL becomes valid
+
+    // check if productID is not null before constructing the URL
+    if(productID){
+      const walmartURL = `https://www.walmart.com/ip/${formattedTitle}/${productID}`;
+
+      Linking.openURL(walmartURL)
+      .then(() => console.log("Opened Walmart URL: ", walmartURL))
+      .catch((error) => console.error("Error opening Walmart URL: ", error));
+    } 
+    else{
+      console.error("Unable to construct Walmart URL due to Product ID being null");
+    }
+  };
+
+  const handleRemoveProduct = (index) => {
+    // create copy of acceptedProducts
+    const updatedAcceptedProducts = [...acceptedProducts];
+
+    // remove product at the specified index
+    updatedAcceptedProducts.splice(index, 1);
+
+    // update array by only including elements of accepted products
+    setAcceptedProducts(updatedAcceptedProducts);
+  };
+  
   // render discover results inside productListingContainer when discoverButton is pressed
   const renderDiscoverResults = () => {
     return (
@@ -234,7 +279,7 @@ export default function App() {
             <Text style = {styles.brandTitle}>{brand}</Text>
             <ScrollView horizontal = {true}>
               {/* maps through each item belonging to the current brand that is not $0 */}
-              {Array.isArray(discoverResults[brand]) && discoverResults[brand].filter(item => item.offers.primary.price !== "$0").map((item, index) => (
+              {Array.isArray(discoverResults[brand]) && discoverResults[brand].filter(item => item.offers.primary.price !== 0).map((item, index) => (
                 <TouchableOpacity key = {`${brand}_${index}`} onPress = {() => handleDiscoverItemClick(item)}> 
                   {/* if index is 0, apply firstDiscoverItem style 
                   else, set firstDiscoverItem style to null */}
@@ -256,27 +301,27 @@ export default function App() {
     return (
       <ScrollView vertical = {true}>
         {acceptedProducts.map((product, index) => (
-          <View key = {index} style = {styles.acceptedProductContainer}>
-            <View style = {styles.productInfoContainer}>
-              <Image source = {{ uri: product.img }} style = {styles.acceptedProductImg}/>
-              <View style = {styles.productTextContainer}>
-                <Text style = {styles.acceptedProductTitle}>{product.title}</Text>
-                <Text style = {styles.acceptedProductPrice}>{product.price}</Text>
-              </View>
+          <Swipeable key = {`${product.id}_${index}`} renderRightActions = {() => (
+            <View style = {styles.rightActionsContainer}>
+              <TouchableOpacity onPress = {() => handleViewOnWalmart(product)} style = {[styles.rightAction, styles.purchaseProduct]}>
+                <Image source = { WalmartLogo } style = {{ width: 30, height: 30 }}/>
+              </TouchableOpacity>
+              <TouchableOpacity onPress = {() => handleRemoveProduct(index)} style = {[styles.rightAction, styles.removeProduct]}>
+                <MaterialIcons name = "close" size = {30} color = "white"/>
+              </TouchableOpacity>
             </View>
-            <View style = {styles.divider}/>
-            <Swipeable renderRightActions = {() => (
-              <View style = {styles.rightActionsContainer}>
-                <TouchableOpacity onPress = {() => handleViewOnWalmart(product)} style = {[styles.rightAction, styles.acceptAction]}>
-                  <MaterialIcons name = "check" size = {30} color = "white"/>
-                </TouchableOpacity>
-                <TouchableOpacity onPress = {() => handleRemoveProduct(index)} style = {[styles.rightAction, styles.declineAction]}>
-                  <MaterialIcons name = "close" size = {30} color = "white"/>
-                </TouchableOpacity>
+          )}>
+            <View style = {styles.acceptedProductContainer}>
+              <View style = {styles.productInfoContainer}>
+                <Image source = {{ uri: product.img }} style = {styles.acceptedProductImg}/>
+                <View style = {styles.productTextContainer}>
+                  <Text style = {styles.acceptedProductTitle}>{product.title}</Text>
+                  <Text style = {styles.acceptedProductPrice}>{product.price}</Text>
+                </View>
               </View>
-            )}>
-            </Swipeable>
-          </View>
+              <View style = {styles.divider}/>
+            </View>
+          </Swipeable>
         ))}
       </ScrollView>
     );
@@ -529,8 +574,8 @@ const styles = StyleSheet.create({
   discoverItem: {
     flexDirection: "column",
     alignItems: "center",
-    paddingHorizontal: 20, 
-    marginLeft: -20, // counteract paddingHorizontal with negative margin  
+    paddingHorizontal: 10, 
+    marginLeft: -10, // counteract paddingHorizontal with negative margin so the next elements of the arrays have equal margins 
   },
   // apply only to the first elements of their respective brand arrays
   firstDiscoverItem: {
@@ -578,6 +623,22 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 }, 
     shadowRadius: 4, 
     marginLeft: 5,
+  },
+  purchaseProduct: {
+    backgroundColor: "blue",
+    shadowColor: "black", 
+    shadowOpacity: 0.3, 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowRadius: 4, 
+    marginRight: 4,
+  },
+  removeProduct: {
+    backgroundColor: "red",
+    shadowColor: "black", 
+    shadowOpacity: 0.3, 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowRadius: 4, 
+    marginRight: 12,
   },
   acceptedProductContainer: {
     flexDirection: "column",
