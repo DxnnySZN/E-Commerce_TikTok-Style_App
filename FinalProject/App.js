@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, Image, ActivityIndicator, ScrollView, TouchableOpacity, Linking} from 'react-native';
+import { StyleSheet, Text, View, TextInput, Image, ActivityIndicator, ScrollView, TouchableOpacity, Linking, Alert } from 'react-native';
 import axios from 'axios'; // allows HTTP requests from both Node.js environments and web browsers, 
 // providing an easy-to-use API for making asynchronous HTTP requests to REST endpoints and interacting with web servers
 import { AntDesign, Ionicons, MaterialCommunityIcons, MaterialIcons, Octicons, Feather } from '@expo/vector-icons';
@@ -228,6 +228,26 @@ export default function App() {
     setDiscoverVisible(false);
   };
 
+  const handleLogOut = () => {
+    Alert.alert(
+      "Log Out",
+      "Are you sure you want to log out?",
+      [
+        {
+          text: "Cancel",
+        },
+            
+        {
+          text: "Log Out",
+          style: "destructive",
+          onPress: () => {
+            console.log("User logged out");
+          }
+        }
+      ]
+    );
+  };
+
   const renderRightActions = (itemID) => {
     return (
       <View style={styles.rightActionsContainer}>
@@ -349,7 +369,7 @@ export default function App() {
         </View>
         <View style = {styles.profileButton}>
           <Octicons name = "person" size = {43} color = "black"
-           onPress = {() => console.log("button pressed")}/>
+           onPress = {() => handleLogOut()}/>
         </View>
       </View>
 
