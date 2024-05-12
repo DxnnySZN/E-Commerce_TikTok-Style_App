@@ -42,9 +42,6 @@ export default function App() {
   // hold user's desired products
   const [acceptedProducts, setAcceptedProducts] = useState([]);
 
-  // track if user accessed FYP from DiscoverPage
-  const [accessedFromDiscover, setAccessedFromDiscover] = useState(false);
-
   const fetchNewProduct = useCallback(() => { // useCallback prevents fetching of new products during each render
     // fetch product data only when fonts are loaded and the search button hasn't been pressed
     if(fontsLoaded && !searchPressed){
@@ -105,7 +102,7 @@ export default function App() {
         const searchResults = searchResultsArray[index];
 
         // add searchResults to the array for the corresponding brand
-          categorizedItems[brand] = searchResults;
+        categorizedItems[brand] = searchResults;
         });
       // update state with categorized items
       setDiscoverResults(categorizedItems);
@@ -125,28 +122,15 @@ export default function App() {
   }, [fetchNewProduct, fetchSearchResults, fetchDiscoverResults]); 
 
   const handleAcceptProduct = () => {
-    fetchNewProduct();
-    if(productImg && productTitle && productPrice){
+    if(productImg && productTitle && productPrice){ // check if the necessary data for a product exists
       // "..." creates a new array by copying the values from an existing array
       setAcceptedProducts([...acceptedProducts, { img: productImg, title: productTitle, price: productPrice }]);
-    }
-    if(accessedFromDiscover){
-      setDiscoverVisible(true);
-    }
-    else{
-      setDiscoverVisible(false);
+      fetchNewProduct();
     }
   };
 
   const handleDeclineProduct = () => {
     fetchNewProduct();
-    setDiscoverVisible(true);
-    if(accessedFromDiscover){
-      setDiscoverVisible(true);
-    }
-    else{
-      setDiscoverVisible(false);
-    }
   };
 
   const handleHomeButtonPress = () => {
@@ -184,7 +168,6 @@ export default function App() {
   };
 
   const handleSearch = () => {
-    // when user presses searchButton, set true to render search input and results
     setSearchPressed(true);
     fetchSearchResults(searchText);
     setDiscoverVisible(false);
@@ -192,26 +175,14 @@ export default function App() {
   };
 
   const handleDiscover = () => {
-    // check if user has accessed FYP from DiscoverPage
-    const fromDiscover = discoverVisible;
-    
-    // set accessedFromDiscover based on whether user accessed FYP from DiscoverPage
-    setAccessedFromDiscover(fromDiscover);
-    
-    // toggle discover visibility
-    setDiscoverVisible(!discoverVisible);
-    
-    // reset other states
+    setDiscoverVisible(true);
     setSearchPressed(false);
     setCartPressed(false);
-  };   
+  };
 
-  // if user is interested in a discover item and presses it, 
-  // user will be brought back to the home FYP with the discover item's information displayed
-  const handleDiscoverItemClick = (item) => {
-    // set true to indicate that the user accessed FYP from DiscoverPage
-    setAccessedFromDiscover(true);
-    
+  // responsible for getting the information of the pressed item in DiscoverPage
+  const handleDiscoverItemPress = (item) => {
+    // set the state variables to details of the pressed item
     setProductImg(item.product.main_image);
     setProductTitle(item.product.title);
     setProductPrice("$" + item.offers.primary.price);
@@ -265,6 +236,7 @@ export default function App() {
     const formattedTitle = product.title.replace(/\s+/g, '-'); // replace spaces with hyphens in the item title so the URL becomes valid
 
     // check if productID is not null before constructing the URL
+    // without the product's legitimate ID, the URL will either display another product or not have any product to display
     if(productID){
       const walmartURL = `https://www.walmart.com/ip/${formattedTitle}/${productID}`;
 
@@ -277,7 +249,7 @@ export default function App() {
     }
   };
 
-  const handleRemoveProduct = (index) => {
+  const handleRemoveProductFromCart = (index) => {
     // create copy of acceptedProducts
     const updatedAcceptedProducts = [...acceptedProducts];
 
@@ -300,7 +272,7 @@ export default function App() {
             <ScrollView horizontal = {true}>
               {/* maps through each item belonging to the current brand that is not $0 */}
               {Array.isArray(discoverResults[brand]) && discoverResults[brand].filter(item => item.offers.primary.price !== 0).map((item, index) => (
-                <TouchableOpacity key = {`${brand}_${index}`} onPress = {() => handleDiscoverItemClick(item)}> 
+                <TouchableOpacity key = {`${brand}_${index}`} onPress = {() => handleDiscoverItemPress(item)}> 
                   {/* if index is 0, apply firstDiscoverItem style 
                   else, set firstDiscoverItem style to null */}
                   <View key = {`${brand}_${index}`} style = {[styles.discoverItem, index === 0 ? styles.firstDiscoverItem : null]}>
@@ -326,7 +298,7 @@ export default function App() {
               <TouchableOpacity onPress = {() => handleViewOnWalmart(product)} style = {[styles.rightAction, styles.purchaseProduct]}>
                 <Image source = { WalmartLogo } style = {{ width: 30, height: 30 }}/>
               </TouchableOpacity>
-              <TouchableOpacity onPress = {() => handleRemoveProduct(index)} style = {[styles.rightAction, styles.removeProduct]}>
+              <TouchableOpacity onPress = {() => handleRemoveProductFromCart(index)} style = {[styles.rightAction, styles.removeProduct]}>
                 <MaterialIcons name = "close" size = {30} color = "white"/>
               </TouchableOpacity>
             </View>
